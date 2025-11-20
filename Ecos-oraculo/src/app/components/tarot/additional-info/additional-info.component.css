@@ -1,0 +1,1152 @@
+@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cormorant+Garamond:wght@300;400;600&display=swap");
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+/* Fondo mágico */
+.background {
+  /* Asegurar que la imagen de fondo se cargue correctamente */
+  background-image: url("/IMAGEN-ORIGEN-scaled-1.webp");
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+  background-attachment: fixed;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  /* Fallback con gradiente si la imagen no carga */
+  background-color: #1a0033;
+  background: linear-gradient(
+      135deg,
+      rgba(26, 0, 51, 0.9),
+      rgba(46, 7, 63, 0.9)
+    ),
+    url("/IMAGEN-ORIGEN-scaled-1.webp") center center/cover fixed;
+}
+.background::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(ellipse at top, #1a0033, transparent 50%),
+    radial-gradient(ellipse at bottom, #46074f, transparent 50%),
+    radial-gradient(ellipse at center, #2d1b69, transparent 50%);
+  z-index: -1;
+}
+/* Polvo cósmico animado */
+.cosmic-dust {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+      2px 2px at 20% 30%,
+      rgba(255, 215, 0, 0.3),
+      transparent
+    ),
+    radial-gradient(2px 2px at 60% 70%, rgba(138, 43, 226, 0.2), transparent),
+    radial-gradient(1px 1px at 50% 50%, rgba(255, 255, 255, 0.2), transparent);
+  background-size: 50px 50px;
+  animation: cosmicDrift 100s linear infinite;
+}
+
+@keyframes cosmicDrift {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(-50px, -50px);
+  }
+}
+
+/* Orbes místicos flotantes */
+.mystical-orbs {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40px);
+  animation: orbFloat 20s infinite ease-in-out;
+}
+
+.orb-1 {
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(138, 43, 226, 0.3), transparent);
+  top: -150px;
+  left: -150px;
+  animation-duration: 25s;
+}
+
+.orb-2 {
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.3), transparent);
+  bottom: -125px;
+  right: -125px;
+  animation-duration: 30s;
+  animation-delay: -5s;
+}
+
+.orb-3 {
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(100, 149, 237, 0.3), transparent);
+  top: 50%;
+  left: 50%;
+  animation-duration: 35s;
+  animation-delay: -10s;
+}
+
+@keyframes orbFloat {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.3;
+  }
+  25% {
+    transform: translate(100px, -50px) scale(1.1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate(-50px, 100px) scale(0.9);
+    opacity: 0.4;
+  }
+  75% {
+    transform: translate(-100px, -100px) scale(1.05);
+    opacity: 0.3;
+  }
+}
+
+/* Estrellas flotantes */
+.floating-stars {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.star {
+  position: absolute;
+  color: rgba(255, 215, 0, 0.6);
+  font-size: 24px;
+  animation: starFloat 15s infinite linear;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.star:nth-child(1) {
+  left: 10%;
+  animation-delay: 0s;
+}
+.star:nth-child(2) {
+  left: 25%;
+  animation-delay: 3s;
+  font-size: 18px;
+}
+.star:nth-child(3) {
+  left: 50%;
+  animation-delay: 6s;
+}
+.star:nth-child(4) {
+  left: 75%;
+  animation-delay: 9s;
+  font-size: 20px;
+}
+.star:nth-child(5) {
+  left: 90%;
+  animation-delay: 12s;
+}
+
+@keyframes starFloat {
+  0% {
+    transform: translateY(100vh) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* Constelaciones SVG */
+.constellations {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.constellation {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  top: 20%;
+  right: 10%;
+  opacity: 0.3;
+  animation: constellationPulse 10s infinite ease-in-out;
+}
+
+.constellation-path {
+  stroke: rgba(255, 215, 0, 0.5);
+  stroke-width: 1;
+  fill: none;
+  stroke-dasharray: 300;
+  stroke-dashoffset: 300;
+  animation: drawPath 5s ease-out forwards;
+}
+
+.constellation-star {
+  fill: rgba(255, 215, 0, 0.8);
+  animation: starTwinkle 2s infinite;
+}
+
+.constellation-star:nth-child(even) {
+  animation-delay: 1s;
+}
+
+@keyframes drawPath {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes starTwinkle {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes constellationPulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Contenedor del popup */
+.popup-container {
+  position: relative;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  animation: popupEntry 0.8s ease-out;
+}
+
+@keyframes popupEntry {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Tarjeta mágica principal */
+.magical-card {
+  background: linear-gradient(
+    135deg,
+    rgba(30, 20, 60, 0.95),
+    rgba(60, 40, 100, 0.95)
+  );
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 30px;
+  max-width: 500px;
+  width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  margin: auto;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 0 0 100px rgba(138, 43, 226, 0.3),
+    inset 0 0 50px rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Aura mágica alrededor de la tarjeta */
+.card-aura {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle,
+    transparent,
+    rgba(138, 43, 226, 0.2),
+    transparent
+  );
+  animation: auraRotate 30s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes auraRotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Header místico */
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 20px;
+  animation: fadeInDown 1s ease-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mystical-symbol {
+  font-size: 30px;
+  animation: symbolFloat 3s ease-in-out infinite;
+}
+
+@keyframes symbolFloat {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-5px) rotate(5deg);
+  }
+}
+
+.card-title {
+  font-family: "Cinzel", serif;
+  font-size: 28px;
+  color: #ffd700;
+  text-align: center;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.5), 0 0 40px rgba(255, 215, 0, 0.3);
+  letter-spacing: 2px;
+}
+
+/* Divisor mágico */
+.divider-magical {
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #ffd700,
+    #8a2be2,
+    #ffd700,
+    transparent
+  );
+  margin: 20px 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.divider-magical::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.8),
+    transparent
+  );
+  animation: shimmerSlide 3s infinite;
+}
+
+@keyframes shimmerSlide {
+  to {
+    left: 100%;
+  }
+}
+
+/* Contenido de la tarjeta */
+.card-content {
+  position: relative;
+}
+
+.intro-text {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.9);
+  text-align: center;
+  margin-bottom: 25px;
+  line-height: 1.6;
+  animation: fadeIn 1s ease-out 0.3s both;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Contenedor del formulario */
+.form-container {
+  animation: formSlideIn 0.8s ease-out 0.5s both;
+}
+
+@keyframes formSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Inputs mágicos */
+.magical-input {
+  position: relative;
+  margin-bottom: 25px;
+  animation: inputFloat 0.6s ease-out;
+}
+
+.floating-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: "Cinzel", serif;
+  font-size: 14px;
+  color: #ffd700;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.label-icon {
+  font-size: 16px;
+  animation: iconSpin 3s ease-in-out infinite;
+}
+
+@keyframes iconSpin {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(10deg);
+  }
+}
+
+.mystical-input,
+.mystical-select {
+  width: 100%;
+  padding: 12px 15px;
+  background: rgba(20, 15, 40, 0.8);
+  border: 2px solid rgba(255, 215, 0, 0.3);
+  border-radius: 10px;
+  color: #fff;
+  font-size: 16px;
+  font-family: "Cormorant Garamond", serif;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.mystical-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+  font-style: italic;
+}
+
+.mystical-input:focus,
+.mystical-select:focus {
+  border-color: #ffd700;
+  background: rgba(30, 20, 60, 0.9);
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.3),
+    inset 0 0 10px rgba(255, 215, 0, 0.1);
+}
+
+/* Efecto de brillo en inputs */
+.input-glow {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #ffd700, transparent);
+  transition: width 0.3s ease;
+  pointer-events: none;
+}
+
+.mystical-input:focus ~ .input-glow,
+.mystical-select:focus ~ .input-glow {
+  width: 100%;
+}
+
+/* Contenedor de teléfono */
+.phone-container-magical {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+/* Select personalizado */
+.select-wrapper {
+  position: relative;
+}
+
+.mystical-select {
+  appearance: none;
+  padding-right: 35px;
+  cursor: pointer;
+}
+
+.select-arrow {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #ffd700;
+  pointer-events: none;
+  transition: transform 0.3s ease;
+}
+
+.select-wrapper:hover .select-arrow {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+/* Checkbox místico */
+.terms-container {
+  margin: 20px 0;
+}
+
+.mystical-checkbox {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  transition: color 0.3s ease;
+}
+
+.mystical-checkbox:hover {
+  color: #fff;
+}
+
+.checkbox-custom {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  margin-right: 12px;
+  background: rgba(20, 15, 40, 0.8);
+  border: 2px solid rgba(255, 215, 0, 0.5);
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mystical-checkbox input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.mystical-checkbox input[type="checkbox"]:checked ~ .checkbox-custom {
+  background: linear-gradient(135deg, #ffd700, #8a2be2);
+  border-color: #ffd700;
+  animation: checkPulse 0.4s ease;
+}
+
+@keyframes checkPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.checkbox-tick {
+  opacity: 0;
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  transform: scale(0);
+  transition: all 0.3s ease;
+}
+
+.mystical-checkbox
+  input[type="checkbox"]:checked
+  ~ .checkbox-custom
+  .checkbox-tick {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.terms-link {
+  color: #ffd700;
+  text-decoration: underline;
+  transition: all 0.3s ease;
+}
+
+.terms-link:hover {
+  color: #fff;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+/* Mensajes de error elegantes */
+.error-container {
+  min-height: 30px;
+  margin-bottom: 15px;
+}
+
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 15px;
+  background: rgba(255, 50, 50, 0.2);
+  border: 1px solid rgba(255, 100, 100, 0.5);
+  border-radius: 8px;
+  color: #ff6b6b;
+  font-size: 14px;
+  animation: errorShake 0.5s ease;
+  margin-bottom: 10px;
+}
+
+.error-message.none {
+  display: none;
+}
+
+.error-message.show {
+  display: flex;
+}
+
+@keyframes errorShake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+.error-icon {
+  font-size: 18px;
+  animation: errorPulse 1s infinite;
+}
+
+@keyframes errorPulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Botón mágico principal */
+.magical-submit-btn {
+  position: relative;
+  width: 100%;
+  padding: 18px 30px;
+  background: linear-gradient(135deg, #ffd700, #ff8c00, #ffd700);
+  background-size: 200% 200%;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  animation: gradientShift 3s ease infinite;
+  box-shadow: 0 10px 30px rgba(255, 165, 0, 0.4),
+    0 0 60px rgba(255, 215, 0, 0.2), inset 0 0 20px rgba(255, 255, 255, 0.2);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-family: "Cinzel", serif;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.btn-bg {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.magical-submit-btn:hover .btn-bg {
+  left: 100%;
+}
+
+.btn-content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #2c1810;
+  z-index: 1;
+}
+
+.btn-icon {
+  font-size: 20px;
+  animation: iconSparkle 2s infinite;
+}
+
+@keyframes iconSparkle {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2) rotate(180deg);
+    opacity: 0.8;
+  }
+}
+
+.btn-text {
+  font-weight: bold;
+}
+
+/* Partículas del botón */
+.btn-particles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.btn-particles span {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  background: #fff;
+  border-radius: 50%;
+  opacity: 0;
+  animation: particleFloat 2s infinite;
+}
+
+.btn-particles span:nth-child(1) {
+  left: 20%;
+  animation-delay: 0s;
+}
+.btn-particles span:nth-child(2) {
+  left: 40%;
+  animation-delay: 0.5s;
+}
+.btn-particles span:nth-child(3) {
+  left: 60%;
+  animation-delay: 1s;
+}
+.btn-particles span:nth-child(4) {
+  left: 80%;
+  animation-delay: 1.5s;
+}
+
+@keyframes particleFloat {
+  0% {
+    bottom: 0;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    bottom: 100%;
+    opacity: 0;
+  }
+}
+
+.magical-submit-btn:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 15px 40px rgba(255, 165, 0, 0.5),
+    0 0 80px rgba(255, 215, 0, 0.4), inset 0 0 30px rgba(255, 255, 255, 0.3);
+}
+
+.magical-submit-btn:active {
+  transform: translateY(-1px) scale(0.98);
+}
+
+/* Estado deshabilitado */
+.magical-submit-btn:disabled {
+  background: linear-gradient(135deg, #666, #888);
+  cursor: not-allowed;
+  opacity: 0.6;
+  animation: none;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.magical-submit-btn:disabled:hover {
+  transform: none;
+}
+
+/* Mensaje de agradecimiento */
+.thank-you-container {
+  text-align: center;
+  animation: successEntry 0.8s ease-out;
+}
+
+@keyframes successEntry {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.success-animation {
+  margin-bottom: 25px;
+}
+
+.success-circle {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto;
+  background: linear-gradient(135deg, #ffd700, #8a2be2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: successPulse 2s infinite;
+  box-shadow: 0 0 50px rgba(255, 215, 0, 0.5);
+}
+
+@keyframes successPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 50px rgba(255, 215, 0, 0.5);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 80px rgba(255, 215, 0, 0.8);
+  }
+}
+
+.success-icon {
+  font-size: 50px;
+  animation: successSpin 3s linear infinite;
+}
+
+@keyframes successSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.success-title {
+  font-family: "Cinzel", serif;
+  font-size: 28px;
+  color: #ffd700;
+  margin-bottom: 15px;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+.success-text {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.loading-spirits {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.spirit {
+  font-size: 30px;
+  animation: spiritDance 2s ease-in-out infinite;
+}
+
+.spirit:nth-child(1) {
+  animation-delay: 0s;
+}
+.spirit:nth-child(2) {
+  animation-delay: 0.3s;
+}
+.spirit:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+@keyframes spiritDance {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-20px) scale(1.2);
+  }
+}
+
+/* Utilidades */
+.none {
+  display: none !important;
+  opacity: 0;
+}
+
+.show {
+  display: block !important;
+  opacity: 1;
+  animation: fadeIn 0.5s ease;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .magical-card {
+    width: 95vw;
+    padding: 20px;
+  }
+
+  .card-title {
+    font-size: 24px;
+  }
+
+  .phone-container-magical {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .mystical-input,
+  .mystical-select {
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+
+  .magical-submit-btn {
+    padding: 15px 20px;
+    font-size: 14px;
+  }
+
+  .intro-text {
+    font-size: 16px;
+  }
+
+  .success-circle {
+    width: 80px;
+    height: 80px;
+  }
+
+  .success-icon {
+    font-size: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .magical-card {
+    padding: 15px;
+    border-radius: 15px;
+  }
+
+  .card-title {
+    font-size: 20px;
+  }
+
+  .mystical-symbol {
+    font-size: 24px;
+  }
+
+  .floating-label {
+    font-size: 12px;
+  }
+
+  .magical-submit-btn {
+    padding: 12px 15px;
+    font-size: 13px;
+  }
+
+  .btn-icon {
+    font-size: 16px;
+  }
+}
+
+/* Animación adicional para elementos que aparecen */
+@keyframes slideInFromBottom {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.magical-input:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.magical-input:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.magical-input:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.terms-container {
+  animation: slideInFromBottom 0.6s ease-out 0.4s both;
+}
+.magical-submit-btn {
+  animation: slideInFromBottom 0.6s ease-out 0.5s both;
+}
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  color: white;
+  font-size: 18px;
+  font-family: "Cinzel", serif;
+}
+
+.loading-overlay.none {
+  display: none;
+}
+
+.loading-spinner {
+  width: 60px;
+  height: 60px;
+  border: 5px solid rgba(255, 255, 255, 0.3);
+  border-top-color: gold;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 15px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.back-home-btn {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  z-index: 10000;
+  padding: 15px 30px;
+  font-size: 12px;
+  color: white;
+  background: #7d6ac3;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin: 10px 0;
+  width: 200px;
+  text-transform: uppercase;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s;
+}
+.back-home-btn:hover {
+  background: #29176d;
+  transform: translateY(-3px);
+}

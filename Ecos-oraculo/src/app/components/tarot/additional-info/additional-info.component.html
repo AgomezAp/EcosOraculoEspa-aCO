@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Google tag (gtag.js) -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-PJDQNK9DX4"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+
+      gtag("config", "G-PJDQNK9DX4");
+    </script>
+    <!-- Google Tag Manager -->
+    <script>
+      (function (w, d, s, l, i) {
+        w[l] = w[l] || [];
+        w[l].push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
+        var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s),
+          dl = l != "dataLayer" ? "&l=" + l : "";
+        j.async = true;
+        j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
+        f.parentNode.insertBefore(j, f);
+      })(window, document, "script", "dataLayer", "GTM-59978X4K");
+    </script>
+    <!-- End Google Tag Manager -->
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript
+      ><iframe
+        src="https://www.googletagmanager.com/ns.html?id=GTM-59978X4K"
+        height="0"
+        width="0"
+        style="display: none; visibility: hidden"
+      ></iframe
+    ></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+    <button class="back-home-btn" (click)="volverAlInicio()">
+      <i class="fa fa-arrow-left"></i> Volver al inicio
+    </button>
+    <div class="background">
+      <div class="cosmic-dust"></div>
+      <div class="mystical-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+      </div>
+
+      <!-- Estrellas flotantes -->
+      <div class="floating-stars">
+        <span class="star">✦</span>
+        <span class="star">✧</span>
+        <span class="star">★</span>
+        <span class="star">✦</span>
+        <span class="star">◈</span>
+      </div>
+
+      <!-- Constelaciones animadas -->
+      <div class="constellations">
+        <svg class="constellation" viewBox="0 0 200 200">
+          <path
+            class="constellation-path"
+            d="M20,50 L50,30 L80,40 L110,20 L140,50 L170,30"
+          />
+          <circle class="constellation-star" cx="20" cy="50" r="2" />
+          <circle class="constellation-star" cx="50" cy="30" r="2" />
+          <circle class="constellation-star" cx="80" cy="40" r="2" />
+          <circle class="constellation-star" cx="110" cy="20" r="2" />
+          <circle class="constellation-star" cx="140" cy="50" r="2" />
+          <circle class="constellation-star" cx="170" cy="30" r="2" />
+        </svg>
+      </div>
+
+      <app-particles class="particles-js"></app-particles>
+
+      <!-- Popup principal con animación -->
+      <div class="popup-container" [@fadeIn]>
+        <div class="magical-card">
+          <!-- Efecto de aura mágica -->
+          <div class="card-aura"></div>
+
+          <!-- Header místico -->
+          <div class="card-header">
+            <div class="mystical-symbol">🔮</div>
+            <h2 class="card-title">Conexión Espiritual</h2>
+            <div class="mystical-symbol">🔮</div>
+          </div>
+
+          <div class="divider-magical"></div>
+
+          <!-- Contenido principal -->
+          <div class="card-content">
+            <p class="intro-text">
+              Las cartas han hablado. Ahora es momento de conectar con una de
+              nuestras maestras expertas para una guía personalizada.
+            </p>
+
+            <!-- Formulario mágico -->
+            <div id="phoneContainer" class="form-container show">
+              <!-- Campo nombre con efecto mágico -->
+              <div class="input-group magical-input">
+                <label for="nombreCliente" class="floating-label">
+                  <span class="label-icon">✨</span>
+                  Nombre Completo
+                </label>
+                <input
+                  id="nombreCliente"
+                  type="text"
+                  [(ngModel)]="nombreCliente"
+                  class="mystical-input"
+                  placeholder="Tu nombre sagrado..."
+                  required
+                />
+                <div class="input-glow"></div>
+              </div>
+
+              <!-- Grupo de teléfono con diseño místico -->
+              <div class="phone-container-magical">
+                <div class="input-group magical-input country-select">
+                  <label for="countryCode" class="floating-label">
+                    <span class="label-icon">🌍</span>
+                    País
+                  </label>
+                  <div class="select-wrapper">
+                    <select
+                      id="countryCode"
+                      [(ngModel)]="countryCode"
+                      class="mystical-select"
+                      required
+                    >
+                      <option value="">Seleccionar...</option>
+                      <option value="+34">🇪🇸 España (+34)</option>
+                    </select>
+                    <div class="select-arrow">▼</div>
+                  </div>
+                  <div class="input-glow"></div>
+                </div>
+
+                <div class="input-group magical-input phone-input">
+                  <label for="phoneInput" class="floating-label">
+                    <span class="label-icon">📱</span>
+                    Teléfono
+                  </label>
+                  <input
+                    id="phoneInput"
+                    type="tel"
+                    [(ngModel)]="phone"
+                    class="mystical-input"
+                    placeholder="Tu número..."
+                    required
+                  />
+                  <div class="input-glow"></div>
+                </div>
+              </div>
+
+              <!-- Términos con estilo místico -->
+              <div class="terms-container">
+                <label class="mystical-checkbox">
+                  <input
+                    type="checkbox"
+                    id="termsCheckbox"
+                    [(ngModel)]="termsAccepted"
+                  />
+                  <span class="checkbox-custom">
+                    <span class="checkbox-tick">✓</span>
+                  </span>
+                  <span class="terms-text">
+                    Acepto los
+                    <a
+                      href="/terminos-y-condiciones"
+                      target="_blank"
+                      class="terms-link"
+                    >
+                      términos sagrados
+                    </a>
+                  </span>
+                </label>
+              </div>
+
+              <!-- Mensajes de error elegantes -->
+              <div class="error-container">
+                <div id="errorMessage" class="error-message none">
+                  <span class="error-icon">⚠️</span>
+                  Por favor, selecciona tu país
+                </div>
+                <div id="numErrorMessage" class="error-message none">
+                  <span class="error-icon">⚠️</span>
+                  Ingresa un número válido
+                </div>
+              </div>
+
+              <!-- Botón mágico principal -->
+              <button
+                id="desplegable"
+                class="magical-submit-btn"
+                (click)="submitPhone()"
+                [disabled]="
+                  !termsAccepted || !nombreCliente || !countryCode || !phone
+                "
+              >
+                <span class="btn-bg"></span>
+                <span class="btn-content">
+                  <span class="btn-icon">✨</span>
+                  <span class="btn-text">Conectar con una Maestra</span>
+                  <span class="btn-icon">✨</span>
+                </span>
+                <div class="btn-particles">
+                  <span></span><span></span><span></span><span></span>
+                </div>
+              </button>
+            </div>
+
+            <!-- Mensaje de agradecimiento con animación -->
+            <div id="thankYouMessage" class="thank-you-container none">
+              <div class="success-animation">
+                <div class="success-circle">
+                  <span class="success-icon">✨</span>
+                </div>
+              </div>
+              <h3 class="success-title">¡Conexión Establecida!</h3>
+              <p class="success-text">
+                Pronto una de nuestras maestras se pondrá en contacto contigo
+                para guiarte en tu camino espiritual.
+              </p>
+              <div class="loading-spirits">
+                <span class="spirit">🔮</span>
+                <span class="spirit">✨</span>
+                <span class="spirit">⭐</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="loadingOverlay" class="loading-overlay none">
+      <div class="loading-spinner"></div>
+      <p>Consultando con la maestra...</p>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Google tag (gtag.js) -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-PJDQNK9DX4"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+
+      gtag("config", "G-PJDQNK9DX4");
+    </script>
+    <!-- Google Tag Manager -->
+    <script>
+      (function (w, d, s, l, i) {
+        w[l] = w[l] || [];
+        w[l].push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
+        var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s),
+          dl = l != "dataLayer" ? "&l=" + l : "";
+        j.async = true;
+        j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
+        f.parentNode.insertBefore(j, f);
+      })(window, document, "script", "dataLayer", "GTM-59978X4K");
+    </script>
+    <!-- End Google Tag Manager -->
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript
+      ><iframe
+        src="https://www.googletagmanager.com/ns.html?id=GTM-59978X4K"
+        height="0"
+        width="0"
+        style="display: none; visibility: hidden"
+      ></iframe
+    ></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+    <!--   
+  <div class="background">
+    <h1>Tarot Colombia</h1>
+    <h1>¿Sobre qué tema deseas consultar?</h1>
+  <div  [@fadeIn] class="content-container" id="startContainer">
+    <button id="start-button-amor" class="start-button-amor" (click)="startTarot('amor')">Amor</button>
+    <button id="start-button-dinero" class="start-button-dinero" (click)="startTarot('dinero')">Dinero</button>
+    <button id="start-button-futuro" class="start-button-futuro" (click)="startTarot('futuro')">Futuro</button>
+  </div>
+  </div> -->
+    <app-particles class="particles-js"></app-particles>
+
+    <button class="back-home-btn" (click)="volverAlInicio()">
+      <i class="fa fa-arrow-left"></i> Volver al inicio
+    </button>
+
+    <div class="magical-background">
+      <div class="stars"></div>
+      <div class="stars2"></div>
+      <div class="stars3"></div>
+      <div class="mystical-orb"></div>
+      <div class="floating-symbols">
+        <span class="symbol">✦</span>
+        <span class="symbol">✧</span>
+        <span class="symbol">⬟</span>
+        <span class="symbol">◈</span>
+        <span class="symbol">✦</span>
+        <span class="symbol">✧</span>
+      </div>
+    </div>
+
+    <div class="background">
+      <div class="title-container" [@slideDown]>
+        <h1 class="main-title glowing-text">Oráculo</h1>
+        <div class="mystical-line"></div>
+        <h2 class="subtitle">¿Sobre qué tema deseas consultar?</h2>
+      </div>
+
+      <div [@fadeIn] class="content-container" id="startContainer">
+        <div class="cards-container">
+          <!-- Botón AMOR -->
+          <div class="card-option amor" [@slideIn]="'left'">
+            <button
+              id="start-button-amor"
+              class="start-button-amor magical-button"
+              (click)="startTarot('amor')"
+            >
+              <!-- Imagen de reverso como contenido -->
+              <img src="/reverso.png" alt="Carta Amor" class="button-card" />
+
+              <!-- Texto encima -->
+              <span class="button-text">Amor</span>
+
+              <div class="button-sparkle"></div>
+            </button>
+          </div>
+
+          <!-- Botón DINERO -->
+          <div class="card-option dinero" [@slideIn]="'center'">
+            <button
+              id="start-button-dinero"
+              class="start-button-dinero magical-button"
+              (click)="startTarot('dinero')"
+            >
+              <img src="/reverso.png" alt="Carta Dinero" class="button-card" />
+
+              <span class="button-text">Dinero</span>
+
+              <div class="button-sparkle"></div>
+            </button>
+          </div>
+
+          <!-- Botón FUTURO -->
+          <div class="card-option futuro" [@slideIn]="'right'">
+            <button
+              id="start-button-futuro"
+              class="start-button-futuro magical-button"
+              (click)="startTarot('futuro')"
+            >
+              <img src="/reverso.png" alt="Carta Futuro" class="button-card" />
+
+              <span class="button-text">Futuro</span>
+
+              <div class="button-sparkle"></div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="crystal-ball" [@pulse]></div>
+    </div>
+  </body>
+</html>

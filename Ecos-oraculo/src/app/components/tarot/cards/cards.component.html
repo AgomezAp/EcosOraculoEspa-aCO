@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Google tag (gtag.js) -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-PJDQNK9DX4"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+
+      gtag("config", "G-PJDQNK9DX4");
+    </script>
+    <!-- Google Tag Manager -->
+    <script>
+      (function (w, d, s, l, i) {
+        w[l] = w[l] || [];
+        w[l].push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
+        var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s),
+          dl = l != "dataLayer" ? "&l=" + l : "";
+        j.async = true;
+        j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
+        f.parentNode.insertBefore(j, f);
+      })(window, document, "script", "dataLayer", "GTM-59978X4K");
+    </script>
+    <!-- End Google Tag Manager -->
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Selección de Cartas - Tarot</title>
+  </head>
+  <body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript
+      ><iframe
+        src="https://www.googletagmanager.com/ns.html?id=GTM-59978X4K"
+        height="0"
+        width="0"
+        style="display: none; visibility: hidden"
+      ></iframe
+    ></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+
+    <!-- Partículas de fondo -->
+    <app-particles class="particles-js"></app-particles>
+
+    <!-- Botón de volver -->
+    <button class="back-home-btn" (click)="volverAlInicio()">
+      <i class="fa fa-arrow-left"></i> Volver al inicio
+    </button>
+
+    <div class="background">
+      <!-- Efectos sutiles de partículas -->
+      <div class="floating-stars">
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+      </div>
+
+      <!-- Header mejorado -->
+      <div class="header-container">
+        <h2 class="main-title">
+          <span>Selecciona</span>
+          <span class="number-highlight">3</span>
+          <span>cartas</span>
+        </h2>
+        <p class="subtitle">Deja que el universo guíe tu elección</p>
+        <div class="card-counter">
+          Cartas seleccionadas:
+          <span class="counter">{{ selectedCards.length }}/3</span>
+        </div>
+      </div>
+
+      <!-- Contenedor principal -->
+      <div [@fadeIn] class="content-container">
+        <!-- Mesa de cartas -->
+        <div class="cartas-container">
+          <div id="cardContainer" class="card-container"></div>
+        </div>
+
+        <!-- Slots para cartas seleccionadas -->
+        <div class="selected-area" id="selectedArea">
+          <div class="card-slot" id="slot-0">
+            <div class="slot-label">Pasado</div>
+          </div>
+          <div class="card-slot" id="slot-1">
+            <div class="slot-label">Presente</div>
+          </div>
+          <div class="card-slot" id="slot-2">
+            <div class="slot-label">Futuro</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Overlay de transición -->
+      <div class="transition-overlay" id="transitionOverlay">
+        <div class="loading-spinner"></div>
+        <p>Revelando tu destino...</p>
+      </div>
+    </div>
+
+    <!-- ========== MODAL DE RECOLECCIÓN DE DATOS ========== -->
+    <app-recolecta-datos
+      *ngIf="showDataModal"
+      (onDataSubmitted)="onUserDataSubmitted($event)"
+      (onModalClosed)="onDataModalClosed()"
+    >
+    </app-recolecta-datos>
+
+    <!-- ========== MODAL DE PAGO PAYPAL ========== -->
+    <div *ngIf="showPaymentModal" class="payment-modal-overlay">
+      <div class="payment-modal-content">
+        <h3 class="payment-modal-title">🔮 Completa tu Lectura de Tarot</h3>
+
+        <p class="modal-text">
+          Para revelar las descripciones detalladas de tus cartas y lo que los
+          astros tienen para ti, realiza una pequeña contribución de 4.00€
+        </p>
+
+        <!-- Loading State -->
+        <div *ngIf="isProcessingPayment" class="loading-container">
+          <div class="spinner"></div>
+          <p class="loading-text">Preparando el pago...</p>
+        </div>
+
+        <!-- Error Message -->
+        <div *ngIf="paymentError" class="payment-error-message">
+          <i class="fa fa-exclamation-circle"></i>
+          <p>{{ paymentError }}</p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="modal-actions">
+          <button
+            *ngIf="!isProcessingPayment"
+            (click)="handlePaymentSubmit()"
+            class="pay-button"
+          >
+            <i class="fa fa-lock"></i>
+            Pagar 4.00€
+          </button>
+
+          <button
+            (click)="cancelPayment()"
+            class="cancel-button"
+            [disabled]="isProcessingPayment"
+          >
+            <i class="fa fa-times"></i>
+            Cancelar
+          </button>
+        </div>
+
+        <!-- Security Badge -->
+        <div class="security-badge">
+          <i class="fa fa-shield-alt"></i>
+          <span>Pago seguro con PayPal</span>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

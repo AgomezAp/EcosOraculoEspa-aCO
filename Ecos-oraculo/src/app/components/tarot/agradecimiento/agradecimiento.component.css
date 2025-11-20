@@ -1,0 +1,192 @@
+@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cormorant+Garamond:wght@300;400;600&display=swap");
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+/* Fondo simple pero elegante */
+.background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(
+      135deg,
+      rgba(10, 0, 21, 0.8),
+      rgba(46, 7, 63, 0.6)
+    ),
+    url("/IMAGEN-ORIGEN-scaled-1.webp") center center/cover no-repeat;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* Partículas en el fondo - NO INTERFIEREN */
+.particles-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1; /* Muy bajo */
+  pointer-events: none !important; /* IMPORTANTE: No bloquea clics */
+}
+
+/* Contenedor principal con glassmorphism simple */
+.content-container {
+  background: linear-gradient(
+    135deg,
+    rgba(30, 20, 60, 0.9),
+    rgba(60, 40, 100, 0.8)
+  );
+  backdrop-filter: blur(20px);
+  border: 2px solid rgba(255, 215, 0, 0.3);
+  border-radius: 30px;
+  padding: 50px 40px;
+  width: 90%;
+  max-width: 700px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 60px rgba(255, 215, 0, 0.1);
+  text-align: center;
+  position: relative;
+  z-index: 10; /* Por encima de las partículas */
+}
+
+/* Títulos elegantes y simples */
+h1 {
+  font-family: "Cinzel", serif;
+  color: #ffd700;
+  font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+  font-weight: 600;
+  margin-bottom: 25px;
+  line-height: 1.4;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+  position: relative;
+  z-index: 11;
+}
+
+/* Contenedor del botón */
+.button-container {
+  margin-top: 40px;
+  position: relative;
+  z-index: 12; /* Más alto que todo */
+}
+
+/* Botón elegante y optimizado */
+.call-to-action {
+  background: linear-gradient(135deg, #ffd700, #ff8c00);
+  color: #1a0033;
+  border: none;
+  padding: 18px 45px;
+  font-family: "Cinzel", serif;
+  font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 30px rgba(255, 165, 0, 0.4);
+  display: inline-block;
+  position: relative;
+  z-index: 100; /* Z-index muy alto para asegurar interacción */
+  pointer-events: auto !important; /* Forzar que sea clickeable */
+}
+
+.call-to-action:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 15px 40px rgba(255, 165, 0, 0.6);
+  filter: brightness(1.1);
+}
+
+.call-to-action:active {
+  transform: translateY(-1px) scale(1.02);
+}
+
+.call-to-action:focus {
+  outline: 2px solid #ffd700;
+  outline-offset: 3px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .content-container {
+    width: 95%;
+    padding: 35px 25px;
+  }
+
+  h1 {
+    font-size: 1.4rem;
+    margin-bottom: 20px;
+  }
+
+  .call-to-action {
+    padding: 15px 35px;
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .content-container {
+    padding: 25px 20px;
+    border-radius: 20px;
+  }
+
+  h1 {
+    font-size: 1.2rem;
+  }
+
+  .call-to-action {
+    padding: 12px 25px;
+    font-size: 1rem;
+  }
+}
+
+/* Para usuarios que prefieren menos movimiento */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.1s !important;
+  }
+}
+.back-home-btn {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  z-index: 100;
+  padding: 15px 30px;
+  font-size: 12px;
+  color: white;
+  background: #7d6ac3;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin: 10px 0;
+  width: 200px;
+  text-transform: uppercase;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s;
+}
+.back-home-btn:hover {
+  background: #29176d;
+  transform: translateY(-3px);
+}

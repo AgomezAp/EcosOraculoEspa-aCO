@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Google tag (gtag.js) -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-PJDQNK9DX4"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+
+      gtag("config", "G-PJDQNK9DX4");
+    </script>
+    <!-- Google Tag Manager -->
+    <script>
+      (function (w, d, s, l, i) {
+        w[l] = w[l] || [];
+        w[l].push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
+        var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s),
+          dl = l != "dataLayer" ? "&l=" + l : "";
+        j.async = true;
+        j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
+        f.parentNode.insertBefore(j, f);
+      })(window, document, "script", "dataLayer", "GTM-59978X4K");
+    </script>
+    <!-- End Google Tag Manager -->
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Document</title>
+  </head>
+  <body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript
+      ><iframe
+        src="https://www.googletagmanager.com/ns.html?id=GTM-59978X4K"
+        height="0"
+        width="0"
+        style="display: none; visibility: hidden"
+      ></iframe
+    ></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+
+    <app-particles class="particles-js"></app-particles>
+    <button class="back-home-btn" (click)="volverAlInicio()">
+      <i class="fa fa-arrow-left"></i> Volver al inicio
+    </button>
+    <!-- <div class="background">
+  <div class="cards-container" [@fadeIn]>
+    <div class="card-description">
+      <div class="cards">
+        <div *ngFor="let card of selectedCards; let i = index" class="card-item">
+          <img [src]="card.src" alt="Carta seleccionada" />
+          <h3>{{ card.name }}</h3>
+        </div>
+      </div>
+      
+      <div class="description-content">
+        <div class="result-page">
+          <h3>Descripción General</h3>
+          <!-- [ngClass]="{ blurred: !isPaid, 'no-select': !isPaid  }" 
+          <div class="scrollable-description" >
+            <p>{{ descriptionsText }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="button-container">
+     <!--    <div *ngIf="!isPaid" class="result-container">
+          <button class="call-to-action" (click)="makePayment()">Hacer Pago</button>
+        </div> -->
+    <!-- *ngIf="isPaid" 
+        <div  class="result-container">
+          <button class="call-to-action" id="call-to-action" (click)="showPopup()">Hablar con una maestra</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> -->
+
+    <div class="background">
+      <!-- Efectos de ambiente místico -->
+      <div class="mystical-overlay"></div>
+      <div class="floating-orbs">
+        <div class="orb"></div>
+        <div class="orb"></div>
+        <div class="orb"></div>
+      </div>
+
+      <!-- Partículas animadas -->
+      <div class="animated-particles">
+        <span class="particle">✦</span>
+        <span class="particle">✧</span>
+        <span class="particle">◈</span>
+        <span class="particle">✦</span>
+      </div>
+
+      <!-- Contenedor principal animado -->
+      <div class="cards-container" [@fadeIn]>
+        <!-- Header con título -->
+        <div class="revelation-header">
+          <h1 class="main-title">Tu Lectura de Tarot</h1>
+          <div class="divider-line"></div>
+          <p class="subtitle">Las cartas han revelado tu destino</p>
+        </div>
+
+        <div class="card-description">
+          <!-- Sección de cartas con animación -->
+          <div class="cards-showcase">
+            <div class="cards">
+              <div
+                *ngFor="let card of selectedCards; let i = index"
+                class="card-item"
+                [attr.data-index]="i"
+              >
+                <div class="card-wrapper">
+                  <div class="card-glow"></div>
+                  <img [src]="card.src" [alt]="card.name" />
+                  <div class="card-info">
+                    <h3>{{ card.name }}</h3>
+                    <span class="card-position">{{ getCardPosition(i) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Contenido de descripción mejorado -->
+          <div class="description-section">
+            <div class="description-wrapper">
+              <div class="description-header">
+                <span class="icon">🔮</span>
+                <h3>Mensaje de las Cartas</h3>
+                <span class="icon">🔮</span>
+              </div>
+
+              <div class="description-content">
+                <div class="scrollable-description" id="descriptionText">
+                  <p class="description-text">{{ descriptionsText }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botón de acción mejorado -->
+          <div class="action-section">
+            <div class="button-container">
+              <button
+                class="magical-cta"
+                id="call-to-action"
+                (click)="showPopup()"
+              >
+                <span class="button-bg"></span>
+                <span class="button-content">
+                  <span class="button-icon">✨</span>
+                  <span class="button-text">Hablar con una Maestra</span>
+                  <span class="button-icon">✨</span>
+                </span>
+              </button>
+              <p class="cta-subtitle">
+                Obtén una guía personalizada de nuestras expertas
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Overlay de carga mejorado -->
+      <div class="loading-overlay" *ngIf="isLoading">
+        <div class="loading-content">
+          <div class="mystical-spinner"></div>
+          <p>Interpretando las energías...</p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

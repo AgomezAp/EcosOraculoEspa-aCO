@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Animal Interior</title>
+    <!-- Google tag (gtag.js) -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=GT-K5QNXGSM"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+      gtag("config", "GT-K5QNXGSM");
+    </script>
+    <script>
+      (function (w, d, s, l, i) {
+        w[l] = w[l] || [];
+        w[l].push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
+        var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s),
+          dl = l != "dataLayer" ? "&l=" + l : "";
+        j.async = true;
+        j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
+        f.parentNode.insertBefore(j, f);
+      })(window, document, "script", "dataLayer", "GTM-NM5V9XQ2");
+    </script>
+  </head>
+  <body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript
+      ><iframe
+        src="https://www.googletagmanager.com/ns.html?id=GTM-NM5V9XQ2"
+        height="0"
+        width="0"
+        style="display: none; visibility: hidden"
+      ></iframe
+    ></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+    <video autoplay muted loop playsinline class="background-video">
+      <source src="/ANIMAL.mp4" type="video/mp4" />
+      Tu navegador no soporta videos HTML5.
+    </video>
+
+    <!-- Overlay opcional para mejorar legibilidad -->
+    <div class="video-overlay"></div>
+
+    <div class="oracle-container">
+      <div class="content-with-navbar">
+        <div class="oracle-main">
+          <!-- ===== INFORMACIÓN DEL GUÍA ===== -->
+          <div class="interpreter-info">
+            <div class="interpreter-avatar">
+              <img
+                class="mystical-orb-image"
+                src="/Maestra-5.webp"
+                alt="Maestra Avatar"
+              />
+            </div>
+            <div class="interpreter-details">
+              <!-- Primera línea: nombre + icono + título juntos -->
+              <div class="name-title-row">
+                <h3>Xamán Kiara</h3>
+                <span class="separator-icon">»</span>
+                <p class="interpreter-title">Guía de Animales Interiores</p>
+              </div>
+              <!-- Segunda línea: especialidad debajo EN MAYÚSCULAS -->
+              <p class="interpreter-specialty">
+                Especialista en conexión espiritual con el reino animal
+              </p>
+            </div>
+            <button
+              class="close-chat-btn"
+              onclick="window.location.href='/'"
+              aria-label="Cerrar"
+            >
+              <svg
+                class="close-icon"
+                width="12"
+                height="12"
+                viewBox="0 0 12 12"
+              >
+                <path
+                  d="M1 1L11 11M1 11L11 1"
+                  stroke="gray"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </button>
+          </div>
+
+          <!-- ===== ÁREA DE CHAT ===== -->
+          <div class="chat-area">
+            <div
+              class="messages-container"
+              #chatContainer
+              (scroll)="onScroll($event)"
+              (mousedown)="onUserStartScroll()"
+              (wheel)="onUserStartScroll()"
+            >
+              <!-- Mensajes normales -->
+              <div
+                *ngFor="let message of chatMessages"
+                class="message"
+                [ngClass]="{
+                  'user-message': message.isUser,
+                  'blocked-message': isMessageBlocked(message)
+                }"
+              >
+                <div
+                  class="message-avatar"
+                  [ngClass]="{
+                    'user-avatar': message.isUser,
+                    'interpreter-avatar-small': !message.isUser
+                  }"
+                >
+                  <img
+                    *ngIf="message.isUser"
+                    class="user-avatar-image"
+                    src="/Visitante.webp"
+                    alt="Usuario Avatar"
+                  />
+                  <img
+                    *ngIf="!message.isUser"
+                    class="interpreter-avatar-small"
+                    src="/Maestra-5.webp"
+                    alt="Maestra Avatar"
+                  />
+                </div>
+
+                <div
+                  class="message-content"
+                  [ngClass]="{ 'blurred-content': isMessageBlocked(message) }"
+                >
+                  <div class="message-bubble">
+                    <p [innerHTML]="formatMessage(message.content)"></p>
+                    <span class="message-time">{{
+                      getTimeString(message.timestamp)
+                    }}</span>
+                  </div>
+                </div>
+
+                <!-- Overlay de pago para mensajes bloqueados -->
+                <div
+                  *ngIf="isMessageBlocked(message)"
+                  class="message-payment-overlay"
+                >
+                  <div class="payment-prompt">
+                    <span class="lock-icon">🔒</span>
+                    <p>¡Contenido premium!</p>
+                    <p>
+                      Desbloquea consultas ilimitadas con tu guía espiritual
+                    </p>
+                    <button class="unlock-button" (click)="promptForPayment()">
+                      Desbloquear por 4.00
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Indicador de carga -->
+              <div *ngIf="isLoading" class="message typing-indicator">
+                <div class="message-avatar interpreter-avatar-small">
+                  <img
+                    class="interpreter-avatar-small"
+                    src="/Maestra-5.webp"
+                    alt="Maestra Avatar"
+                  />
+                </div>
+                <div class="message-content">
+                  <div class="message-bubble typing">
+                    <div class="typing-dots">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </div>
+                    <p class="typing-text">
+                      Xamán Kiara está analizando tu consulta...
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ===== ÁREA DE ENTRADA ===== -->
+          </div>
+          <div class="input-area">
+            <div class="input-container">
+              <div class="text-input-wrapper">
+                <textarea
+                  class="message-input"
+                  [(ngModel)]="currentMessage"
+                  placeholder="Escribe tu consulta sobre tu animal interior..."
+                  (input)="autoResize($event)"
+                  (keydown)="onKeyPress($event)"
+                  [disabled]="isLoading"
+                  rows="1"
+                >
+                </textarea>
+              </div>
+
+              <div class="action-buttons">
+                <button
+                  class="clear-button"
+                  (click)="clearChat()"
+                  title="Limpiar chat"
+                >
+                  <i class="fas fa-redo"></i>
+                </button>
+                <button
+                  class="send-button"
+                  id="send-button"
+                  (click)="sendMessage()"
+                  [disabled]="!currentMessage.trim() || isLoading"
+                  title="Enviar mensaje"
+                >
+                  <i class="fas fa-paper-plane"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <app-recolecta-datos
+        *ngIf="showDataModal"
+        (onDataSubmitted)="onUserDataSubmitted($event)"
+        (onModalClosed)="onDataModalClosed()"
+      >
+      </app-recolecta-datos>
+    </div>
+
+    <!-- ===== MODAL DE PAGO ===== -->
+    <div *ngIf="showPaymentModal" class="payment-modal-overlay">
+      <div class="payment-modal">
+        <div class="payment-header">
+          <h3>🦉 Desbloquear Sabiduría Animal</h3>
+          <button class="close-payment-button" (click)="cancelPayment()">
+            ✕
+          </button>
+        </div>
+
+        <div class="payment-content">
+          <div class="payment-info">
+            <p>Accede a consultas ilimitadas con Xamán Kiara</p>
+            <p>Descubre los secretos profundos de tu animal interior</p>
+          </div>
+
+          <div class="payment-price">
+            <span class="price-amount">4.00€</span>
+            <p class="price-description">Acceso completo e ilimitado</p>
+          </div>
+
+          <div
+            *ngIf="isProcessingPayment"
+            class="payment-loading"
+          >
+            <div class="loading-spinner"></div>
+            <p>Preparando el pago...</p>
+          </div>
+
+          <div *ngIf="paymentError" class="payment-error">
+            {{ paymentError }}
+          </div>
+
+          <div
+            *ngIf="!isProcessingPayment "
+            id="payment-element-container-animal"
+            class="payment-element-container"
+          ></div>
+
+          <div class="payment-actions">
+            <button
+              *ngIf="!isProcessingPayment "
+              class="pay-button"
+              (click)="handlePaymentSubmit()"
+              [disabled]="isProcessingPayment"
+            >
+              {{ isProcessingPayment ? "Procesando..." : "Pagar 4.00€" }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <app-fortune-wheel
+      [isVisible]="showFortuneWheel"
+      [prizes]="animalPrizes"
+      (onPrizeWon)="onPrizeWon($event)"
+      (onWheelClosed)="onWheelClosed()"
+    >
+    </app-fortune-wheel>
+  </body>
+</html>
+
+<!-- Video de fondo -->
