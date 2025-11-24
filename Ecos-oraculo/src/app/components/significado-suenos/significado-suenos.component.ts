@@ -117,10 +117,10 @@ export class SignificadoSuenosComponent
 
   // Frases de bienvenida aleatorias
   welcomeMessages = [
-    'Ah, ich sehe, du bist gekommen, um die Mysterien deiner onirischen Welt zu entschlüsseln... Träume sind Fenster zur Seele. Erzähl mir, welche Visionen dich besucht haben?',
-    'Die kosmischen Energien flüstern mir zu, dass du Träume hast, die interpretiert werden müssen. Ich bin Meisterin Alma, Hüterin der onirischen Geheimnisse. Welche Botschaft des Unterbewusstseins beunruhigt dich?',
-    'Willkommen, Reisender der Träume. Die astralen Ebenen haben mir deine Ankunft gezeigt. Lass mich dich durch die Symbole und Mysterien deiner nächtlichen Visionen führen.',
-    'Der Kristall der Träume leuchtet bei deiner Anwesenheit auf... Ich spüre, dass du Visionen trägst, die entschlüsselt werden müssen. Vertraue meiner uralten Weisheit und teile deine Träume mit mir.',
+    'Ah, veo que has venido para descifrar los misterios de tu mundo onírico... Los sueños son ventanas al alma. Cuéntame, ¿qué visiones te han visitado?',
+    'Las energías cósmicas me susurran que tienes sueños que deben ser interpretados. Soy la Maestra Alma, guardiana de los secretos oníricos. ¿Qué mensaje del subconsciente te preocupa?',
+    'Bienvenido, viajero de los sueños. Los planos astrales me han mostrado tu llegada. Déjame guiarte a través de los símbolos y misterios de tus visiones nocturnas.',
+    'El cristal de los sueños brilla con tu presencia... Siento que llevas visiones que deben ser descifradas. Confía en mi antigua sabiduría y comparte tus sueños conmigo.',
   ];
 
   constructor(
