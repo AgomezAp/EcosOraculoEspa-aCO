@@ -430,7 +430,7 @@ Los doce signos (Aries, Tauro, Géminis, Cáncer, Leo, Virgo, Libra, Escorpio, S
     try {
       // Iniciar el flujo de pago de PayPal (redirige al usuario)
       await this.paypalService.initiatePayment({
-        amount: '5.00',
+        amount: '4.00',
         currency: 'EUR',
         serviceName: 'Horoscopo',
         returnPath: '/horoscopo',

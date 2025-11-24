@@ -573,7 +573,7 @@ Estoy aquí para descifrar los secretos ocultos en tu carta natal. Las estrellas
 
     try {
       await this.paypalService.initiatePayment({
-        amount: '5.00',
+        amount: '4.00',
         currency: 'EUR',
         serviceName: 'Tabla de nacimiento',
         returnPath: '/tabla-nacimiento',
