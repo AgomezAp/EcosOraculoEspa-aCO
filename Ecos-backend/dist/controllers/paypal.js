@@ -72,7 +72,7 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             ],
             application_context: {
                 brand_name: "Ecos del Oráculo",
-                landing_page: "GUEST_CHECKOUT", // ✅ Fuerza la opción de pago como invitado
+                landing_page: "NO_PREFERENCE",
                 shipping_preference: "NO_SHIPPING",
                 user_action: "PAY_NOW",
                 return_url: `${BACKEND_URL}/api/paypal/capture-order?service=${encodeURIComponent(returnPath)}`,
