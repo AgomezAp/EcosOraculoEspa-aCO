@@ -171,10 +171,10 @@ export class SignificadoSuenosComponent
             const successMessage: ConversationMessage = {
               role: 'interpreter',
               message:
-                '🎉 Zahlung erfolgreich abgeschlossen!\n\n' +
-                '✨ Vielen Dank für deine Zahlung. Du hast jetzt vollen Zugriff auf die Traumdeutung.\n\n' +
-                '💭 Lass uns gemeinsam die Geheimnisse deiner Träume entdecken!\n\n' +
-                '📌 Hinweis: Diese Zahlung gilt nur für den Traumdeutung-Service. Für andere Dienste ist eine separate Zahlung erforderlich.',
+              '🎉 ¡Pago completado con éxito!\n\n' +
+              '✨ Muchas gracias por tu pago. Ahora tienes acceso completo a la interpretación de sueños.\n\n' +
+              '💭 ¡Vamos juntos a descubrir los secretos de tus sueños!\n\n' +
+              '📌 Nota: Este pago es solo para el servicio de interpretación de sueños. Para otros servicios se requiere un pago separado.',
               timestamp: new Date(),
             };
             this.messages.push(successMessage);
@@ -183,13 +183,13 @@ export class SignificadoSuenosComponent
             setTimeout(() => this.scrollToBottom(), 200);
           }, 1000);
         } else {
-          this.paymentError = 'Die Zahlung konnte nicht verifiziert werden.';
+            this.paymentError = 'No se pudo verificar el pago.';
 
           setTimeout(() => {
             const errorMessage: ConversationMessage = {
               role: 'interpreter',
               message:
-                '⚠️ Es gab ein Problem bei der Verifizierung deiner Zahlung. Bitte versuche es erneut oder kontaktiere unseren Support.',
+              '❌ No se pudo verificar el pago. Por favor, intenta nuevamente o contacta con nuestro soporte si el problema persiste.',
               timestamp: new Date(),
             };
             this.messages.push(errorMessage);
@@ -199,15 +199,15 @@ export class SignificadoSuenosComponent
         }
       } catch (error) {
         console.error('Error verificando pago de PayPal:', error);
-        this.paymentError = 'Fehler bei der Zahlungsüberprüfung';
+        this.paymentError = 'Error al verificar el pago';
 
         setTimeout(() => {
-          const errorMessage: ConversationMessage = {
+            const errorMessage: ConversationMessage = {
             role: 'interpreter',
             message:
-              '❌ Leider ist ein Fehler bei der Zahlungsüberprüfung aufgetreten. Bitte versuche es später erneut.',
+              '❌ Lamentablemente ocurrió un error al verificar el pago. Por favor, intenta nuevamente más tarde.',
             timestamp: new Date(),
-          };
+            };
           this.messages.push(errorMessage);
           this.saveMessagesToSession();
           this.cdr.detectChanges();
