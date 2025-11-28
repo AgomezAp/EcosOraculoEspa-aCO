@@ -67,20 +67,20 @@ export class SignificadoSuenosComponent
   wheelPrizes: Prize[] = [
     {
       id: '1',
-      name: '3 weitere Drehungen',
+      name: '3 interpretaciones gratis',
       color: '#4ecdc4',
       icon: '🌙',
     },
     {
       id: '2',
-      name: '1 Premium-Traumanalyse',
+      name: '1 análisis premium de sueños',
       color: '#45b7d1',
       icon: '✨',
     },
     // ✅ ELIMINADO: { id: '3', name: '2 Consultas Oníricas Extra', color: '#ffeaa7', icon: '🔮' },
     {
       id: '4',
-      name: 'Versuche es nochmal!',
+      name: '¡Inténtalo de nuevo!',
       color: '#ff7675',
       icon: '🔄',
     },
@@ -109,10 +109,10 @@ export class SignificadoSuenosComponent
   private backendUrl = environment.apiUrl;
 
   interpreterData: DreamInterpreterData = {
-    name: 'Meisterin Alma',
-    specialty: 'Traumdeutung und onirische Symbolik',
+    name: 'Maestra Alma',
+    specialty: 'Interpretación de sueños y simbolismo onírico',
     experience:
-      'Jahrhunderte der Interpretation von Botschaften des Unterbewusstseins',
+      'Siglos de experiencia interpretando mensajes del subconsciente',
   };
 
   // Frases de bienvenida aleatorias
