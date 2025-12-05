@@ -113,6 +113,7 @@ html, body {
   max-width: 1193px;
   width: calc(100vw - 20px);
   height: calc(100vh - 40px);
+  height: calc(100dvh - 40px); /* Usar dvh como fallback para móviles */
   margin: 0 auto;
   position: relative;
   color: white;
@@ -582,6 +583,9 @@ html, body {
   flex-shrink: 0;
   z-index: 4; /* Asegurar que esté sobre el video */
   position: relative;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(5px);
+  min-height: 65px; /* Altura mínima para garantizar visibilidad */
 }
 
 .input-container {
@@ -1145,6 +1149,7 @@ html, body {
   }
 
   .oracle-main {
+    height: calc(100dvh - 30px);
     height: calc(100vh - 30px);
     border-radius: 20px;
     max-width: 98%;
@@ -1268,6 +1273,7 @@ html, body {
   }
 
   .oracle-main {
+    height: calc(100dvh - 20px);
     height: calc(100vh - 20px);
     padding: 10px;
   }
@@ -1436,6 +1442,7 @@ html, body {
   }
 
   .oracle-main {
+    height: calc(100dvh - 20px);
     height: calc(100vh - 20px);
     width: 100%;
     max-width: calc(100vw - 20px);
@@ -1731,6 +1738,7 @@ html, body {
   }
 
   .oracle-main {
+    height: calc(100dvh - 10px);
     height: calc(100vh - 10px);
     width: 100%;
     max-width: calc(100vw - 10px);
@@ -2033,5 +2041,79 @@ html, body {
   .input-area {
     max-width: 100%;
     overflow-x: hidden;
+  }
+}
+
+/* ===== FIX PARA INPUT-AREA EN MÓVILES ===== */
+@media (max-width: 768px) {
+  .oracle-main {
+    display: flex;
+    flex-direction: column;
+    height: calc(100dvh - 20px); /* Usar dvh para viewport dinámico */
+    max-height: calc(100dvh - 20px);
+  }
+
+  .chat-area {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .messages-container {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .input-area {
+    flex-shrink: 0;
+    position: relative;
+    z-index: 100;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    margin-top: auto;
+    min-height: 60px;
+  }
+}
+
+/* ===== FIX ESPECÍFICO PARA PANTALLAS MUY PEQUEÑAS ===== */
+@media (max-width: 480px) {
+  .oracle-main {
+    height: calc(100dvh - 15px);
+    max-height: calc(100dvh - 15px);
+    padding: 6px;
+  }
+
+  .input-area {
+    padding: 8px 10px;
+    min-height: 55px;
+  }
+
+  .text-input-wrapper {
+    padding: 6px 10px;
+  }
+
+  .message-input {
+    font-size: 14px !important;
+    min-height: 24px;
+  }
+
+  .send-button,
+  .clear-button {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+/* ===== FIX PARA iOS SAFARI ===== */
+@supports (-webkit-touch-callout: none) {
+  .oracle-main {
+    height: calc(100dvh - 20px);
+    height: -webkit-fill-available;
+    max-height: calc(100dvh - 20px);
+  }
+  
+  .input-area {
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
   }
 }
