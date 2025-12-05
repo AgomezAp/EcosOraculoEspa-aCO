@@ -1,22 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <!-- Google tag (gtag.js) -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=GT-K5QNXGSM"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+
+      gtag("config", "GT-K5QNXGSM");
+    </script>
     <meta charset="UTF-8" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
+    <!-- Google Tag Manager -->
+    <script>
+      (function (w, d, s, l, i) {
+        w[l] = w[l] || [];
+        w[l].push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
+        var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s),
+          dl = l != "dataLayer" ? "&l=" + l : "";
+        j.async = true;
+        j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
+        f.parentNode.insertBefore(j, f);
+      })(window, document, "script", "dataLayer", "GTM-NM5V9XQ2");
+    </script>
+    <!-- End Google Tag Manager -->
   </head>
   <body>
-    <!--   
-  <div class="background">
-    <h1>Tarot Colombia</h1>
-    <h1>¿Sobre qué tema deseas consultar?</h1>
-  <div  [@fadeIn] class="content-container" id="startContainer">
-    <button id="start-button-amor" class="start-button-amor" (click)="startTarot('amor')">Amor</button>
-    <button id="start-button-dinero" class="start-button-dinero" (click)="startTarot('dinero')">Dinero</button>
-    <button id="start-button-futuro" class="start-button-futuro" (click)="startTarot('futuro')">Futuro</button>
-  </div>
-  </div> -->
+    <!-- Google Tag Manager (noscript) -->
+    <noscript
+      ><iframe
+        src="https://www.googletagmanager.com/ns.html?id=GTM-NM5V9XQ2"
+        height="0"
+        width="0"
+        style="display: none; visibility: hidden"
+      ></iframe
+    ></noscript>
+    <!-- End Google Tag Manager (noscript) -->
     <app-particles class="particles-js"></app-particles>
 
     <button class="back-home-btn" (click)="volverAlInicio()">

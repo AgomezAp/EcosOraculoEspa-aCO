@@ -1,12 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <!-- Google tag (gtag.js) -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=GT-K5QNXGSM"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+
+      gtag("config", "GT-K5QNXGSM");
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
-  
+    <!-- Google Tag Manager -->
+    <script>
+      (function (w, d, s, l, i) {
+        w[l] = w[l] || [];
+        w[l].push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
+        var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s),
+          dl = l != "dataLayer" ? "&l=" + l : "";
+        j.async = true;
+        j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
+        f.parentNode.insertBefore(j, f);
+      })(window, document, "script", "dataLayer", "GTM-NM5V9XQ2");
+    </script>
+    <!-- End Google Tag Manager -->
   </head>
   <body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript
+      ><iframe
+        src="https://www.googletagmanager.com/ns.html?id=GTM-NM5V9XQ2"
+        height="0"
+        width="0"
+        style="display: none; visibility: hidden"
+      ></iframe
+    ></noscript>
+    <!-- End Google Tag Manager (noscript) -->
     <!-- Fondo con estrellas animadas -->
     <video autoplay muted loop playsinline class="background-video">
       <source src="/HOROSCOPO.mp4" type="video/mp4" />
@@ -217,10 +254,7 @@
             </div>
           </div>
 
-          <div
-            *ngIf="isProcessingPayment "
-            class="payment-loading"
-          >
+          <div *ngIf="isProcessingPayment" class="payment-loading">
             <div class="loading-spinner"></div>
             <p>Preparando el pago seguro...</p>
           </div>
@@ -238,7 +272,7 @@
 
           <div class="payment-actions">
             <button
-              *ngIf="!isProcessingPayment "
+              *ngIf="!isProcessingPayment"
               class="pay-button"
               (click)="handleHoroscopePaymentSubmit()"
               [disabled]="isProcessingPayment"
