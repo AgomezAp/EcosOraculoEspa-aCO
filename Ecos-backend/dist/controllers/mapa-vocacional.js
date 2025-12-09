@@ -15,9 +15,12 @@ class VocationalController {
     constructor() {
         // ✅ LISTA DE MODELOS DE RESPALDO (en orden de preferencia)
         this.MODELS_FALLBACK = [
-            "gemini-2.0-flash-exp",
             "gemini-2.5-flash",
+            "gemini-2.5-flash-preview-09-2025",
+            "gemini-2.5-flash-lite",
+            "gemini-2.5-flash-lite-preview-09-2025",
             "gemini-2.0-flash",
+            "gemini-2.0-flash-lite",
         ];
         // Método principal para chat con consejero vocacional
         this.chatWithCounselor = (req, res) => __awaiter(this, void 0, void 0, function* () {
