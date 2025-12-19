@@ -22,6 +22,9 @@ interface ChineseZodiacRequest {
   birthDate?: string;
   fullName?: string;
   conversationHistory?: ChatMessage[];
+  // ✅ NUEVOS CAMPOS para el sistema de 3 mensajes gratis
+  messageCount?: number;
+  isPremiumUser?: boolean;
 }
 
 interface ChatResponse {
@@ -30,6 +33,11 @@ interface ChatResponse {
   error?: string;
   code?: string;
   timestamp: string;
+  // ✅ NUEVOS CAMPOS que devuelve el backend
+  freeMessagesRemaining?: number;
+  showPaywall?: boolean;
+  paywallMessage?: string;
+  isCompleteResponse?: boolean;
 }
 
 interface MasterInfo {
@@ -41,6 +49,7 @@ interface MasterInfo {
     description: string;
     services: string[];
   };
+  freeMessagesLimit?: number;
   timestamp: string;
 }
 @Injectable({
@@ -54,6 +63,26 @@ export class ZodiacoChinoService {
     return this.http.get<MasterInfo>(`${this.apiUrl}/info`);
   }
 
+  /**
+   * ✅ MÉTODO PRINCIPAL: Enviar mensaje con contador de mensajes
+   */
+  chatWithMasterWithCount(
+    request: ChineseZodiacRequest,
+    messageCount: number,
+    isPremiumUser: boolean
+  ): Observable<ChatResponse> {
+    const fullRequest: ChineseZodiacRequest = {
+      ...request,
+      messageCount,
+      isPremiumUser,
+    };
+
+    return this.http.post<ChatResponse>(`${this.apiUrl}/chat`, fullRequest);
+  }
+
+  /**
+   * Método legacy para compatibilidad
+   */
   chatWithMaster(request: ChineseZodiacRequest): Observable<ChatResponse> {
     return this.http.post<ChatResponse>(`${this.apiUrl}/chat`, request);
   }

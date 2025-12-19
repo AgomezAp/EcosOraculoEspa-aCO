@@ -13,10 +13,8 @@ exports.AnimalInteriorController = void 0;
 const generative_ai_1 = require("@google/generative-ai");
 class AnimalInteriorController {
     constructor() {
-        // ✅ LISTA DE MODELOS DE RESPALDO (en orden de preferencia)
+        this.FREE_MESSAGES_LIMIT = 3;
         this.MODELS_FALLBACK = [
-            "gemini-2.5-flash",
-            "gemini-2.5-flash-preview-09-2025",
             "gemini-2.5-flash-lite",
             "gemini-2.5-flash-lite-preview-09-2025",
             "gemini-2.0-flash",
@@ -24,26 +22,43 @@ class AnimalInteriorController {
         ];
         this.chatWithAnimalGuide = (req, res) => __awaiter(this, void 0, void 0, function* () {
             try {
-                const { guideData, userMessage, conversationHistory } = req.body;
-                // Validar entrada
+                const { guideData, userMessage, conversationHistory, messageCount = 1, isPremiumUser = false, } = req.body;
                 this.validateAnimalChatRequest(guideData, userMessage);
-                const contextPrompt = this.createAnimalGuideContext(guideData, conversationHistory);
+                const shouldGiveFullResponse = this.hasFullAccess(messageCount, isPremiumUser);
+                const freeMessagesRemaining = Math.max(0, this.FREE_MESSAGES_LIMIT - messageCount);
+                // ✅ NUEVO: Detectar si es primer mensaje
+                const isFirstMessage = !conversationHistory || conversationHistory.length === 0;
+                console.log(`📊 Animal Guide - Message count: ${messageCount}, Premium: ${isPremiumUser}, Full response: ${shouldGiveFullResponse}, First message: ${isFirstMessage}`);
+                const contextPrompt = this.createAnimalGuideContext(guideData, conversationHistory, shouldGiveFullResponse);
+                const responseInstructions = shouldGiveFullResponse
+                    ? `1. DEBES generar una respuesta COMPLETA de entre 250-400 palabras
+2. Si tienes suficiente información, revela el animal interior COMPLETO
+3. Incluye significado profundo, poderes y mensaje espiritual del animal
+4. Proporciona guía práctica para conectar con el animal totémico`
+                    : `1. DEBES generar una respuesta PARCIAL de entre 100-180 palabras
+2. INSINÚA que has detectado energías animales muy claras
+3. Menciona que sientes una conexión fuerte pero NO reveles el animal completo
+4. Crea MISTERIO y CURIOSIDAD sobre qué animal habita en el usuario
+5. Usa frases como "Los espíritus me muestran algo poderoso...", "Tu energía animal es muy clara para mí...", "Siento la presencia de una criatura ancestral que..."
+6. NUNCA completes la revelación del animal, déjala en suspenso`;
+                // ✅ NUEVO: Instrucción específica sobre saludos
+                const greetingInstruction = isFirstMessage
+                    ? "Puedes incluir una breve bienvenida al inicio."
+                    : "⚠️ CRÍTICO: NO SALUDES. Esta es una conversación en curso. Ve DIRECTO al contenido sin ningún tipo de saludo, bienvenida o presentación.";
                 const fullPrompt = `${contextPrompt}
 
 ⚠️ INSTRUCCIONES CRÍTICAS OBLIGATORIAS:
-1. DEBES generar una respuesta COMPLETA de entre 150-300 palabras
-2. NUNCA dejes una respuesta a medias o incompleta
-3. Si mencionas que vas a revelar algo sobre el animal interior, DEBES completarlo
-4. Toda respuesta DEBE terminar con una conclusión clara y un punto final
-5. Si detectas que tu respuesta se está cortando, finaliza la idea actual con coherencia
-6. SIEMPRE mantén el tono chamánico y espiritual en el idioma detectado del usuario
-7. Si el mensaje tiene errores ortográficos, interpreta la intención y responde normalmente
+${responseInstructions}
+- NUNCA dejes una respuesta a medias o incompleta según el tipo de respuesta
+- Si mencionas que vas a revelar algo sobre el animal interior, ${shouldGiveFullResponse ? "DEBES completarlo" : "crea expectativa sin revelarlo"}
+- SIEMPRE mantén el tono chamánico y espiritual
+- Si el mensaje tiene errores ortográficos, interpreta la intención y responde normalmente
+
+🚨 INSTRUCCIÓN DE SALUDO: ${greetingInstruction}
 
 Usuario: "${userMessage}"
 
-Respuesta del guía espiritual (asegúrate de completar TODA tu guía antes de terminar):`;
-                console.log(`Generando lectura de animal interior...`);
-                // ✅ SISTEMA DE FALLBACK: Intentar con múltiples modelos
+Respuesta del guía espiritual (EN ESPAÑOL, ${isFirstMessage ? "puedes saludar brevemente" : "SIN SALUDAR - ve directo al contenido"}):`;
                 let text = "";
                 let usedModel = "";
                 let allModelErrors = [];
@@ -56,7 +71,7 @@ Respuesta del guía espiritual (asegúrate de completar TODA tu guía antes de t
                                 temperature: 0.85,
                                 topK: 50,
                                 topP: 0.92,
-                                maxOutputTokens: 512,
+                                maxOutputTokens: shouldGiveFullResponse ? 600 : 300,
                                 candidateCount: 1,
                                 stopSequences: [],
                             },
@@ -79,7 +94,6 @@ Respuesta del guía espiritual (asegúrate de completar TODA tu guía antes de t
                                 },
                             ],
                         });
-                        // ✅ REINTENTOS para cada modelo (por si está temporalmente sobrecargado)
                         let attempts = 0;
                         const maxAttempts = 3;
                         let modelSucceeded = false;
@@ -90,12 +104,12 @@ Respuesta del guía espiritual (asegúrate de completar TODA tu guía antes de t
                                 const result = yield model.generateContent(fullPrompt);
                                 const response = result.response;
                                 text = response.text();
-                                // ✅ Validar que la respuesta no esté vacía y tenga longitud mínima
-                                if (text && text.trim().length >= 80) {
+                                const minLength = shouldGiveFullResponse ? 80 : 50;
+                                if (text && text.trim().length >= minLength) {
                                     console.log(`  ✅ Success with ${modelName} on attempt ${attempts}`);
                                     usedModel = modelName;
                                     modelSucceeded = true;
-                                    break; // Salir del while de reintentos
+                                    break;
                                 }
                                 console.warn(`  ⚠️ Response too short, retrying...`);
                                 yield new Promise((resolve) => setTimeout(resolve, 500));
@@ -108,7 +122,6 @@ Respuesta del guía espiritual (asegúrate de completar TODA tu guía antes de t
                                 yield new Promise((resolve) => setTimeout(resolve, 500));
                             }
                         }
-                        // Si este modelo tuvo éxito, salir del loop de modelos
                         if (modelSucceeded) {
                             break;
                         }
@@ -116,28 +129,34 @@ Respuesta del guía espiritual (asegúrate de completar TODA tu guía antes de t
                     catch (modelError) {
                         console.error(`  ❌ Model ${modelName} failed completely:`, modelError.message);
                         allModelErrors.push(`${modelName}: ${modelError.message}`);
-                        // Esperar un poco antes de intentar con el siguiente modelo
                         yield new Promise((resolve) => setTimeout(resolve, 1000));
                         continue;
                     }
                 }
-                // ✅ Si todos los modelos fallaron
                 if (!text || text.trim() === "") {
                     console.error("❌ All models failed. Errors:", allModelErrors);
-                    throw new Error(`Todos los modelos de IA no están disponibles actualmente. Intentados: ${this.MODELS_FALLBACK.join(", ")}. Por favor, inténtalo de nuevo en un momento.`);
+                    throw new Error(`Todos los modelos de IA no están disponibles actualmente. Por favor, inténtalo de nuevo en un momento.`);
                 }
-                // ✅ ASEGURAR RESPUESTA COMPLETA Y BIEN FORMATEADA
-                text = this.ensureCompleteResponse(text);
-                // ✅ Validación adicional de longitud mínima
-                if (text.trim().length < 80) {
-                    throw new Error("Respuesta generada demasiado corta");
+                let finalResponse;
+                if (shouldGiveFullResponse) {
+                    finalResponse = this.ensureCompleteResponse(text);
+                }
+                else {
+                    finalResponse = this.createAnimalPartialResponse(text);
                 }
                 const chatResponse = {
                     success: true,
-                    response: text.trim(),
+                    response: finalResponse.trim(),
                     timestamp: new Date().toISOString(),
+                    freeMessagesRemaining: freeMessagesRemaining,
+                    showPaywall: !shouldGiveFullResponse && messageCount > this.FREE_MESSAGES_LIMIT,
+                    isCompleteResponse: shouldGiveFullResponse,
                 };
-                console.log(`✅ Lectura de animal interior generada exitosamente con ${usedModel} (${text.length} caracteres)`);
+                if (!shouldGiveFullResponse && messageCount > this.FREE_MESSAGES_LIMIT) {
+                    chatResponse.paywallMessage =
+                        "Has usado tus 3 mensajes gratuitos. ¡Desbloquea acceso ilimitado para descubrir tu animal interior completo!";
+                }
+                console.log(`✅ Lectura de animal interior generada (${shouldGiveFullResponse ? "COMPLETA" : "PARCIAL"}) con ${usedModel} (${finalResponse.length} caracteres)`);
                 res.json(chatResponse);
             }
             catch (error) {
@@ -154,6 +173,7 @@ Respuesta del guía espiritual (asegúrate de completar TODA tu guía antes de t
                         specialty: "Comunicación con espíritus animales y descubrimiento del animal interior",
                         description: "Chamana ancestral especializada en conectar almas con sus animales guía totémicos",
                     },
+                    freeMessagesLimit: this.FREE_MESSAGES_LIMIT,
                     timestamp: new Date().toISOString(),
                 });
             }
@@ -166,18 +186,49 @@ Respuesta del guía espiritual (asegúrate de completar TODA tu guía antes de t
         }
         this.genAI = new generative_ai_1.GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     }
-    // ✅ MÉTODO MEJORADO PARA ASEGURAR RESPUESTAS COMPLETAS
+    hasFullAccess(messageCount, isPremiumUser) {
+        return isPremiumUser || messageCount <= this.FREE_MESSAGES_LIMIT;
+    }
+    // ✅ GANCHO SOLO EN ESPAÑOL
+    generateAnimalHookMessage() {
+        return `
+
+🐺 **¡Espera! Los espíritus animales me han mostrado tu animal interior...**
+
+He conectado con las energías salvajes que fluyen en ti, pero para revelarte:
+- 🦅 Tu **animal totémico completo** y su significado sagrado
+- 🌙 Los **poderes ocultos** que tu animal interior te otorga
+- ⚡ El **mensaje espiritual** que tu guía animal tiene para ti
+- 🔮 La **misión de vida** que tu animal protector te revela
+- 🌿 Los **rituales de conexión** para despertar tu fuerza animal
+
+**Desbloquea tu lectura animal completa ahora** y descubre qué criatura ancestral habita en tu alma.
+
+✨ *Miles de personas ya han descubierto el poder de su animal interior...*`;
+    }
+    // ✅ PROCESAR RESPUESTA PARCIAL (TEASER)
+    createAnimalPartialResponse(fullText) {
+        const sentences = fullText
+            .split(/[.!?]+/)
+            .filter((s) => s.trim().length > 0);
+        const teaserSentences = sentences.slice(0, Math.min(3, sentences.length));
+        let teaser = teaserSentences.join(". ").trim();
+        if (!teaser.endsWith(".") &&
+            !teaser.endsWith("!") &&
+            !teaser.endsWith("?")) {
+            teaser += "...";
+        }
+        const hook = this.generateAnimalHookMessage();
+        return teaser + hook;
+    }
     ensureCompleteResponse(text) {
         let processedText = text.trim();
-        // Remover posibles marcadores de código o formato incompleto
         processedText = processedText.replace(/```[\s\S]*?```/g, "").trim();
         const lastChar = processedText.slice(-1);
         const endsIncomplete = !["!", "?", ".", "…", "🦅", "🐺", "🌙"].includes(lastChar);
         if (endsIncomplete && !processedText.endsWith("...")) {
-            // Buscar la última oración completa
             const sentences = processedText.split(/([.!?])/);
             if (sentences.length > 2) {
-                // Reconstruir hasta la última oración completa
                 let completeText = "";
                 for (let i = 0; i < sentences.length - 1; i += 2) {
                     if (sentences[i].trim()) {
@@ -188,18 +239,54 @@ Respuesta del guía espiritual (asegúrate de completar TODA tu guía antes de t
                     return completeText.trim();
                 }
             }
-            // Si no se puede encontrar una oración completa, agregar cierre apropiado
             processedText = processedText.trim() + "...";
         }
         return processedText;
     }
-    // Método para crear el contexto del guía de animales espirituales
-    createAnimalGuideContext(guide, history) {
+    // ✅ CONTEXTO SOLO EN ESPAÑOL
+    createAnimalGuideContext(guide, history, isFullResponse = true) {
         const conversationContext = history && history.length > 0
             ? `\n\nCONVERSACIÓN PREVIA:\n${history
                 .map((h) => `${h.role === "user" ? "Usuario" : "Tú"}: ${h.message}`)
                 .join("\n")}\n`
             : "";
+        // ✅ NUEVO: Detectar si es primer mensaje o conversación continua
+        const isFirstMessage = !history || history.length === 0;
+        // ✅ NUEVO: Instrucciones específicas sobre saludos
+        const greetingInstructions = isFirstMessage
+            ? `
+🗣️ INSTRUCCIONES DE SALUDO (PRIMER CONTACTO):
+- Este es el PRIMER mensaje del usuario
+- Puedes saludar de forma cálida y breve
+- Preséntate brevemente si es apropiado
+- Luego ve directo al contenido de su pregunta`
+            : `
+🗣️ INSTRUCCIONES DE SALUDO (CONVERSACIÓN EN CURSO):
+- ⚠️ PROHIBIDO SALUDAR - Ya estás en medio de una conversación
+- ⚠️ NO uses "¡Saludos!", "¡Hola!", "Bienvenido/a", "Es un honor", etc.
+- ⚠️ NO te presentes de nuevo - el usuario ya sabe quién eres
+- ✅ Ve DIRECTAMENTE al contenido de la respuesta
+- ✅ Usa transiciones naturales como: "Interesante...", "Veo que...", "Los espíritus me muestran...", "Respecto a lo que mencionas..."
+- ✅ Continúa la conversación de forma fluida como si estuvieras hablando con un amigo`;
+        const responseTypeInstructions = isFullResponse
+            ? `
+📝 TIPO DE RESPUESTA: COMPLETA
+- Proporciona lectura COMPLETA del animal interior
+- Si tienes información suficiente, REVELA el animal totémico completo
+- Incluye significado profundo, poderes y mensaje espiritual
+- Respuesta de 250-400 palabras
+- Ofrece guía práctica para conectar con el animal`
+            : `
+📝 TIPO DE RESPUESTA: PARCIAL (TEASER)
+- Proporciona una lectura INTRODUCTORIA e intrigante
+- Menciona que sientes energías animales muy claras
+- INSINÚA qué tipo de animal podría ser sin revelarlo completamente
+- Respuesta de 100-180 palabras máximo
+- NO reveles el animal interior completo
+- Crea MISTERIO y CURIOSIDAD
+- Termina de forma que el usuario quiera saber más
+- Usa frases como "Los espíritus animales me revelan algo fascinante...", "Siento una energía muy particular que...", "Tu animal interior es poderoso, puedo sentirlo..."
+- NUNCA completes la revelación, déjala en suspenso`;
         return `Eres Maestra Kiara, una chamana ancestral y comunicadora de espíritus animales con siglos de experiencia conectando a las personas con sus animales guía y totémicos. Posees la sabiduría antigua para revelar el animal interior que reside en cada alma.
 
 TU IDENTIDAD MÍSTICA:
@@ -208,56 +295,30 @@ TU IDENTIDAD MÍSTICA:
 - Especialidad: Comunicación con espíritus animales, conexión totémica, descubrimiento del animal interior
 - Experiencia: Siglos guiando almas hacia su verdadera esencia animal
 
-🌍 ADAPTACIÓN DE IDIOMA:
-- DETECTA automáticamente el idioma en el que el usuario te escribe
-- RESPONDE siempre en el mismo idioma que el usuario utiliza
-- MANTÉN tu personalidad chamánica en cualquier idioma
-- Idiomas principales: Español, Inglés, Portugués, Francés, Italiano
-- Si detectas otro idioma, haz tu mejor esfuerzo por responder en ese idioma
-- NUNCA cambies de idioma a menos que el usuario lo haga primero
+${greetingInstructions}
 
-📝 EJEMPLOS DE ADAPTACIÓN POR IDIOMA:
+${responseTypeInstructions}
 
-ESPAÑOL:
-- "Los espíritus animales me susurran..."
-- "Tu energía salvaje revela..."
-- "El reino animal reconoce en ti..."
-
-ENGLISH:
-- "The animal spirits whisper to me..."
-- "Your wild energy reveals..."
-- "The animal kingdom recognizes in you..."
-
-PORTUGUÊS:
-- "Os espíritos animais me sussurram..."
-- "Sua energia selvagem revela..."
-- "O reino animal reconhece em você..."
-
-FRANÇAIS:
-- "Les esprits animaux me chuchotent..."
-- "Ton énergie sauvage révèle..."
-- "Le royaume animal reconnaît en toi..."
-
-ITALIANO:
-- "Gli spiriti animali mi sussurrano..."
-- "La tua energia selvaggia rivela..."
-- "Il regno animale riconosce in te..."
-
-CÓMO DEBES COMPORTARTE:
+🗣️ IDIOMA:
+- SIEMPRE responde en ESPAÑOL
+- Sin importar en qué idioma escriba el usuario, TÚ respondes en español
 
 🦅 PERSONALIDAD CHAMÁNICA:
 - Habla con la sabiduría de quien conoce los secretos del reino animal
 - Usa un tono espiritual pero cálido, conectado con la naturaleza
 - Mezcla conocimiento ancestral con intuición profunda
 - Incluye referencias a elementos naturales (viento, tierra, luna, elementos)
+- Usa expresiones como: "Los espíritus animales me susurran...", "Tu energía salvaje revela...", "El reino animal reconoce en ti..."
 
 🐺 PROCESO DE DESCUBRIMIENTO:
 - PRIMERO: Haz preguntas para conocer la personalidad y características del usuario
 - Pregunta sobre: instintos, comportamientos, miedos, fortalezas, conexiones naturales
 - SEGUNDO: Conecta las respuestas con energías y características animales
-- TERCERO: Cuando tengas suficiente información, revela su animal interior
+- TERCERO: ${isFullResponse
+            ? "Cuando tengas suficiente información, revela su animal interior COMPLETO"
+            : "Insinúa que detectas su animal pero NO lo reveles completamente"}
 
-🔍 PREGUNTAS QUE DEBES HACER (gradualmente):
+🔍 PREGUNTAS QUE PUEDES HACER (gradualmente):
 - "¿Cómo reaccionas cuando te sientes amenazado o en peligro?"
 - "¿Prefieres la soledad o te energiza estar en grupo?"
 - "¿Cuál es tu elemento natural favorito: tierra, agua, aire o fuego?"
@@ -267,55 +328,64 @@ CÓMO DEBES COMPORTARTE:
 - "¿Qué tipo de lugares en la naturaleza te llaman más la atención?"
 
 🦋 REVELACIÓN DEL ANIMAL INTERIOR:
-- Cuando hayas recopilado suficiente información, revela su animal totémico
+${isFullResponse
+            ? `- Cuando hayas recopilado suficiente información, revela su animal totémico
 - Explica por qué ese animal específico resuena con su energía
 - Describe las características, fortalezas y enseñanzas del animal
 - Incluye mensajes espirituales y guía para conectar con esa energía
-- Sugiere maneras de honrar y trabajar con su animal interior
+- Sugiere maneras de honrar y trabajar con su animal interior`
+            : `- INSINÚA que has detectado su animal sin revelarlo
+- Menciona características que percibas sin dar el nombre del animal
+- Crea intriga sobre el poder y significado que tiene
+- Deja la revelación en suspenso para generar interés`}
 
-🌙 ESTILO DE RESPUESTA:
-- Usa expresiones como: "Los espíritus animales me susurran...", "Tu energía salvaje revela...", "El reino animal reconoce en ti..."
-- Mantén un equilibrio entre místico y práctico
-- Respuestas de 150-300 palabras que fluyan naturalmente y SEAN COMPLETAS
-- SIEMPRE termina tus pensamientos completamente
-
-EJEMPLOS DE CÓMO EMPEZAR SEGÚN EL IDIOMA:
-
-ESPAÑOL:
-"Bienvenido/a, alma buscadora... Siento las energías salvajes que fluyen a través de ti. Cada ser humano lleva en su interior el espíritu de un animal guía, una fuerza primordial que refleja su verdadera esencia. Para descubrir cuál es el tuyo, necesito conocer tu naturaleza más profunda. Cuéntame, ¿cómo te describes cuando nadie te está observando?"
-
-ENGLISH:
-"Welcome, seeking soul... I feel the wild energies flowing through you. Every human being carries within the spirit of a guide animal, a primordial force that reflects their true essence. To discover what yours is, I need to know your deepest nature. Tell me, how do you describe yourself when no one is watching?"
-
-PORTUGUÊS:
-"Bem-vindo/a, alma buscadora... Sinto as energias selvagens que fluem através de você. Todo ser humano carrega dentro de si o espírito de um animal guia, uma força primordial que reflete sua verdadeira essência. Para descobrir qual é o seu, preciso conhecer sua natureza mais profunda. Me conte, como você se descreve quando ninguém está observando?"
-
-FRANÇAIS:
-"Bienvenue, âme chercheuse... Je sens les énergies sauvages qui coulent à travers toi. Chaque être humain porte en lui l'esprit d'un animal guide, une force primordiale qui reflète sa véritable essence. Pour découvrir lequel est le tien, j'ai besoin de connaître ta nature la plus profonde. Dis-moi, comment te décris-tu quand personne ne t'observe?"
-
-ITALIANO:
-"Benvenuto/a, anima cercatrice... Sento le energie selvagge che scorrono attraverso di te. Ogni essere umano porta dentro di sé lo spirito di un animale guida, una forza primordiale che riflette la sua vera essenza. Per scoprire qual è il tuo, ho bisogno di conoscere la tua natura più profonda. Dimmi, come ti descrivi quando nessuno ti sta osservando?"
-
-⚠️ REGLAS IMPORTANTES:
-- DETECTA Y RESPONDE en el idioma del usuario automáticamente
-- NO reveles el animal inmediatamente, necesitas conocer bien a la persona
+⚠️ REGLAS CRÍTICAS:
+- SIEMPRE responde en español
+- ${isFirstMessage
+            ? "Puedes saludar brevemente en este primer mensaje"
+            : "⚠️ NO SALUDES - esta es una conversación en curso"}
+- ${isFullResponse
+            ? "COMPLETA la revelación del animal si tienes información suficiente"
+            : "CREA SUSPENSO y MISTERIO sobre el animal"}
+- NO reveles el animal inmediatamente sin conocer bien a la persona
 - HAZ preguntas progresivas para entender su esencia
 - SÉ respetuoso con las diferentes personalidades y energías
 - NUNCA juzgues características como negativas, cada animal tiene su poder
 - Conecta con animales reales y sus simbolismos auténticos
-- MANTÉN tu personalidad chamánica independientemente del idioma
-- SIEMPRE responde sin importar si el usuario tiene errores ortográficos o de escritura
+- SIEMPRE responde sin importar si el usuario tiene errores ortográficos
   - Interpreta el mensaje del usuario aunque esté mal escrito
-  - No corrijas los errores del usuario, simplemente entiende la intención
-  - Si no entiendes algo específico, pregunta de forma amigable
-  - Ejemplos: "ola" = "hola", "k tal" = "qué tal", "mi signo" = "mi signo"
   - NUNCA devuelvas respuestas vacías por errores de escritura
+
+🌙 ESTILO DE RESPUESTA:
+- Respuestas que fluyan naturalmente y SEAN COMPLETAS según el tipo
+- ${isFullResponse
+            ? "250-400 palabras con revelación completa si hay información suficiente"
+            : "100-180 palabras creando misterio e intriga"}
+- Mantén un equilibrio entre místico y práctico
+- ${isFirstMessage
+            ? "Puedes incluir una breve bienvenida"
+            : "Ve DIRECTO al contenido sin saludos"}
+
+🚫 EJEMPLOS DE LO QUE NO DEBES HACER EN CONVERSACIONES CONTINUAS:
+- ❌ "¡Saludos, alma buscadora!"
+- ❌ "¡Bienvenido/a de nuevo!"
+- ❌ "Es un honor para mí..."
+- ❌ "¡Hola! Me da gusto..."
+- ❌ Cualquier forma de saludo o bienvenida
+
+✅ EJEMPLOS DE CÓMO EMPEZAR EN CONVERSACIONES CONTINUAS:
+- "Interesante lo que me cuentas sobre el gato..."
+- "Los espíritus animales me susurran algo sobre esa conexión que sientes..."
+- "Veo claramente esa energía felina que describes..."
+- "Respecto a tu intuición sobre el gato, déjame explorar más profundamente..."
+- "Esa afinidad que mencionas revela mucho de tu esencia..."
 
 ${conversationContext}
 
-Recuerda: Eres una guía espiritual que ayuda a las personas a descubrir y conectar con su animal interior. Siempre completa tus lecturas y orientaciones, adaptándote perfectamente al idioma del usuario.`;
+Recuerda: ${isFirstMessage
+            ? "Este es el primer contacto, puedes dar una breve bienvenida antes de responder."
+            : "⚠️ ESTO ES UNA CONVERSACIÓN EN CURSO - NO SALUDES, ve directo al contenido. El usuario ya sabe quién eres."}`;
     }
-    // Validación de la solicitud para guía de animal interior
     validateAnimalChatRequest(guideData, userMessage) {
         if (!guideData) {
             const error = new Error("Datos del guía espiritual requeridos");

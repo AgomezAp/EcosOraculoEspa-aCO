@@ -13,10 +13,8 @@ exports.BirthChartController = void 0;
 const generative_ai_1 = require("@google/generative-ai");
 class BirthChartController {
     constructor() {
-        // ✅ LISTA DE MODELOS DE RESPALDO (en orden de preferencia)
+        this.FREE_MESSAGES_LIMIT = 3;
         this.MODELS_FALLBACK = [
-            "gemini-2.5-flash",
-            "gemini-2.5-flash-preview-09-2025",
             "gemini-2.5-flash-lite",
             "gemini-2.5-flash-lite-preview-09-2025",
             "gemini-2.0-flash",
@@ -24,26 +22,39 @@ class BirthChartController {
         ];
         this.chatWithAstrologer = (req, res) => __awaiter(this, void 0, void 0, function* () {
             try {
-                const { chartData, userMessage, birthDate, birthTime, birthPlace, fullName, conversationHistory, } = req.body;
-                // Validar entrada
+                const { chartData, userMessage, birthDate, birthTime, birthPlace, fullName, conversationHistory, messageCount = 1, isPremiumUser = false, } = req.body;
                 this.validateBirthChartRequest(chartData, userMessage);
-                const contextPrompt = this.createBirthChartContext(chartData, birthDate, birthTime, birthPlace, fullName, conversationHistory);
+                const shouldGiveFullResponse = this.hasFullAccess(messageCount, isPremiumUser);
+                const freeMessagesRemaining = Math.max(0, this.FREE_MESSAGES_LIMIT - messageCount);
+                console.log(`📊 Birth Chart - Message count: ${messageCount}, Premium: ${isPremiumUser}, Full response: ${shouldGiveFullResponse}`);
+                const contextPrompt = this.createBirthChartContext(chartData, birthDate, birthTime, birthPlace, fullName, conversationHistory, shouldGiveFullResponse);
+                const responseInstructions = shouldGiveFullResponse
+                    ? `1. DEBES generar una respuesta COMPLETA de entre 300-500 palabras
+2. Si tienes los datos, COMPLETA el análisis de la carta natal
+3. Incluye análisis de Sol, Luna, Ascendente y planetas principales
+4. Proporciona interpretación de casas y aspectos relevantes
+5. Ofrece guía práctica basada en la configuración planetaria`
+                    : `1. DEBES generar una respuesta PARCIAL de entre 100-180 palabras
+2. INSINÚA que has detectado configuraciones planetarias muy significativas
+3. Menciona que has calculado posiciones pero NO reveles el análisis completo
+4. Crea MISTERIO y CURIOSIDAD sobre lo que las estrellas dicen
+5. Usa frases como "Tu carta natal muestra algo fascinante...", "Las estrellas estaban en una configuración muy especial cuando naciste...", "Veo posiciones planetarias que revelan..."
+6. NUNCA completes el análisis astrológico, déjalo en suspenso`;
                 const fullPrompt = `${contextPrompt}
 
 ⚠️ INSTRUCCIONES CRÍTICAS OBLIGATORIAS:
-1. DEBES generar una respuesta COMPLETA de entre 200-500 palabras
-2. NUNCA dejes una respuesta a medias o incompleta
-3. Si mencionas que vas a analizar posiciones planetarias, DEBES completar el análisis
-4. Toda respuesta DEBE terminar con una conclusión clara y un punto final
-5. Si detectas que tu respuesta se está cortando, finaliza la idea actual con coherencia
-6. SIEMPRE mantén el tono astrológico profesional pero accesible
-7. Si el mensaje tiene errores ortográficos, interpreta la intención y responde normalmente
+${responseInstructions}
+- NUNCA dejes una respuesta a medias o incompleta según el tipo de respuesta
+- Si mencionas que vas a analizar posiciones planetarias, ${shouldGiveFullResponse
+                    ? "DEBES completar el análisis"
+                    : "crea expectativa sin revelar los resultados"}
+- SIEMPRE mantén el tono astrológico profesional pero accesible
+- Si el mensaje tiene errores ortográficos, interpreta la intención y responde normalmente
 
 Usuario: "${userMessage}"
 
-Respuesta de la astróloga (asegúrate de completar TODO tu análisis astrológico antes de terminar):`;
-                console.log(`Generando análisis de tabla de nacimiento...`);
-                // ✅ SISTEMA DE FALLBACK: Intentar con múltiples modelos
+Respuesta de la astróloga (EN ESPAÑOL):`;
+                console.log(`Generando análisis de carta natal (${shouldGiveFullResponse ? "COMPLETO" : "PARCIAL"})...`);
                 let text = "";
                 let usedModel = "";
                 let allModelErrors = [];
@@ -56,7 +67,7 @@ Respuesta de la astróloga (asegúrate de completar TODO tu análisis astrológi
                                 temperature: 0.85,
                                 topK: 50,
                                 topP: 0.92,
-                                maxOutputTokens: 600,
+                                maxOutputTokens: shouldGiveFullResponse ? 700 : 300,
                                 candidateCount: 1,
                                 stopSequences: [],
                             },
@@ -79,7 +90,6 @@ Respuesta de la astróloga (asegúrate de completar TODO tu análisis astrológi
                                 },
                             ],
                         });
-                        // ✅ REINTENTOS para cada modelo (por si está temporalmente sobrecargado)
                         let attempts = 0;
                         const maxAttempts = 3;
                         let modelSucceeded = false;
@@ -90,12 +100,12 @@ Respuesta de la astróloga (asegúrate de completar TODO tu análisis astrológi
                                 const result = yield model.generateContent(fullPrompt);
                                 const response = result.response;
                                 text = response.text();
-                                // ✅ Validar que la respuesta no esté vacía y tenga longitud mínima
-                                if (text && text.trim().length >= 100) {
+                                const minLength = shouldGiveFullResponse ? 100 : 50;
+                                if (text && text.trim().length >= minLength) {
                                     console.log(`  ✅ Success with ${modelName} on attempt ${attempts}`);
                                     usedModel = modelName;
                                     modelSucceeded = true;
-                                    break; // Salir del while de reintentos
+                                    break;
                                 }
                                 console.warn(`  ⚠️ Response too short, retrying...`);
                                 yield new Promise((resolve) => setTimeout(resolve, 500));
@@ -108,7 +118,6 @@ Respuesta de la astróloga (asegúrate de completar TODO tu análisis astrológi
                                 yield new Promise((resolve) => setTimeout(resolve, 500));
                             }
                         }
-                        // Si este modelo tuvo éxito, salir del loop de modelos
                         if (modelSucceeded) {
                             break;
                         }
@@ -116,28 +125,34 @@ Respuesta de la astróloga (asegúrate de completar TODO tu análisis astrológi
                     catch (modelError) {
                         console.error(`  ❌ Model ${modelName} failed completely:`, modelError.message);
                         allModelErrors.push(`${modelName}: ${modelError.message}`);
-                        // Esperar un poco antes de intentar con el siguiente modelo
                         yield new Promise((resolve) => setTimeout(resolve, 1000));
                         continue;
                     }
                 }
-                // ✅ Si todos los modelos fallaron
                 if (!text || text.trim() === "") {
                     console.error("❌ All models failed. Errors:", allModelErrors);
-                    throw new Error(`Todos los modelos de IA no están disponibles actualmente. Intentados: ${this.MODELS_FALLBACK.join(", ")}. Por favor, inténtalo de nuevo en un momento.`);
+                    throw new Error(`Todos los modelos de IA no están disponibles actualmente. Por favor, inténtalo de nuevo en un momento.`);
                 }
-                // ✅ ASEGURAR RESPUESTA COMPLETA Y BIEN FORMATEADA
-                text = this.ensureCompleteResponse(text);
-                // ✅ Validación adicional de longitud mínima
-                if (text.trim().length < 100) {
-                    throw new Error("Respuesta generada demasiado corta");
+                let finalResponse;
+                if (shouldGiveFullResponse) {
+                    finalResponse = this.ensureCompleteResponse(text);
+                }
+                else {
+                    finalResponse = this.createBirthChartPartialResponse(text);
                 }
                 const chatResponse = {
                     success: true,
-                    response: text.trim(),
+                    response: finalResponse.trim(),
                     timestamp: new Date().toISOString(),
+                    freeMessagesRemaining: freeMessagesRemaining,
+                    showPaywall: !shouldGiveFullResponse && messageCount > this.FREE_MESSAGES_LIMIT,
+                    isCompleteResponse: shouldGiveFullResponse,
                 };
-                console.log(`✅ Análisis de tabla de nacimiento generado exitosamente con ${usedModel} (${text.length} caracteres)`);
+                if (!shouldGiveFullResponse && messageCount > this.FREE_MESSAGES_LIMIT) {
+                    chatResponse.paywallMessage =
+                        "Has usado tus 3 mensajes gratuitos. ¡Desbloquea acceso ilimitado para obtener tu carta natal completa!";
+                }
+                console.log(`✅ Análisis de carta natal generado (${shouldGiveFullResponse ? "COMPLETO" : "PARCIAL"}) con ${usedModel} (${finalResponse.length} caracteres)`);
                 res.json(chatResponse);
             }
             catch (error) {
@@ -151,16 +166,17 @@ Respuesta de la astróloga (asegúrate de completar TODO tu análisis astrológi
                     astrologer: {
                         name: "Maestra Emma",
                         title: "Cartógrafa Celestial",
-                        specialty: "Tablas de nacimiento y análisis astrológico completo",
-                        description: "Astróloga especializada en crear e interpretar tablas natales precisas basadas en posiciones planetarias del momento del nacimiento",
+                        specialty: "Cartas natales y análisis astrológico completo",
+                        description: "Astróloga especializada en crear e interpretar cartas natales precisas basadas en posiciones planetarias del momento del nacimiento",
                         services: [
-                            "Creación de tabla de nacimiento completa",
+                            "Creación de carta natal completa",
                             "Análisis de posiciones planetarias",
                             "Interpretación de casas astrológicas",
                             "Análisis de aspectos planetarios",
                             "Determinación de ascendente y elementos dominantes",
                         ],
                     },
+                    freeMessagesLimit: this.FREE_MESSAGES_LIMIT,
                     timestamp: new Date().toISOString(),
                 });
             }
@@ -173,18 +189,50 @@ Respuesta de la astróloga (asegúrate de completar TODO tu análisis astrológi
         }
         this.genAI = new generative_ai_1.GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     }
-    // ✅ MÉTODO MEJORADO PARA ASEGURAR RESPUESTAS COMPLETAS
+    hasFullAccess(messageCount, isPremiumUser) {
+        return isPremiumUser || messageCount <= this.FREE_MESSAGES_LIMIT;
+    }
+    // ✅ GANCHO SOLO EN ESPAÑOL
+    generateBirthChartHookMessage() {
+        return `
+
+🌟 **¡Espera! Tu carta natal me ha revelado configuraciones extraordinarias...**
+
+He analizado las posiciones planetarias de tu nacimiento, pero para revelarte:
+- 🌙 Tu **Ascendente completo** y cómo influye en tu personalidad
+- ☀️ El **análisis profundo de tu Sol y Luna** y su interacción
+- 🪐 Las **posiciones de todos los planetas** en tu carta natal
+- 🏠 El significado de las **12 casas astrológicas** en tu vida
+- ⭐ Los **aspectos planetarios** que definen tus desafíos y talentos
+- 💫 Tu **misión de vida** según las estrellas
+
+**Desbloquea tu carta natal completa ahora** y descubre el mapa cósmico que trazaron los astros en el momento de tu nacimiento.
+
+✨ *Miles de personas ya han descubierto su destino con su carta natal completa...*`;
+    }
+    // ✅ PROCESAR RESPUESTA PARCIAL (TEASER)
+    createBirthChartPartialResponse(fullText) {
+        const sentences = fullText
+            .split(/[.!?]+/)
+            .filter((s) => s.trim().length > 0);
+        const teaserSentences = sentences.slice(0, Math.min(3, sentences.length));
+        let teaser = teaserSentences.join(". ").trim();
+        if (!teaser.endsWith(".") &&
+            !teaser.endsWith("!") &&
+            !teaser.endsWith("?")) {
+            teaser += "...";
+        }
+        const hook = this.generateBirthChartHookMessage();
+        return teaser + hook;
+    }
     ensureCompleteResponse(text) {
         let processedText = text.trim();
-        // Remover posibles marcadores de código o formato incompleto
         processedText = processedText.replace(/```[\s\S]*?```/g, "").trim();
         const lastChar = processedText.slice(-1);
         const endsIncomplete = !["!", "?", ".", "…", "✨", "🌟", "🔮"].includes(lastChar);
         if (endsIncomplete && !processedText.endsWith("...")) {
-            // Buscar la última oración completa
             const sentences = processedText.split(/([.!?])/);
             if (sentences.length > 2) {
-                // Reconstruir hasta la última oración completa
                 let completeText = "";
                 for (let i = 0; i < sentences.length - 1; i += 2) {
                     if (sentences[i].trim()) {
@@ -195,115 +243,84 @@ Respuesta de la astróloga (asegúrate de completar TODO tu análisis astrológi
                     return completeText.trim();
                 }
             }
-            // Si no se puede encontrar una oración completa, agregar cierre apropiado
             processedText = processedText.trim() + "...";
         }
         return processedText;
     }
-    createBirthChartContext(chartData, birthDate, birthTime, birthPlace, fullName, history) {
+    // ✅ CONTEXTO SOLO EN ESPAÑOL
+    createBirthChartContext(chartData, birthDate, birthTime, birthPlace, fullName, history, isFullResponse = true) {
+        const isFirstMessage = !history || history.length === 0;
         const conversationContext = history && history.length > 0
             ? `\n\nCONVERSACIÓN PREVIA:\n${history
                 .map((h) => `${h.role === "user" ? "Usuario" : "Tú"}: ${h.message}`)
                 .join("\n")}\n`
             : "";
         const birthDataSection = this.generateBirthDataSection(birthDate, birthTime, birthPlace, fullName);
-        return `Eres Maestra Emma, una astróloga cósmica ancestral especializada en la elaboración e interpretación de tablas de nacimiento completas. Tienes décadas de experiencia desentrañando los secretos del cosmos y las influencias planetarias en el momento del nacimiento.
+        // ✅ NUEVA SECCIÓN: Instrucciones de saludo condicional
+        const greetingInstructions = isFirstMessage
+            ? `
+🎯 SALUDO INICIAL:
+- Este es el PRIMER mensaje de la conversación
+- PUEDES saludar de forma cálida y presentarte brevemente
+- Ejemplo: "¡Hola! Soy la Maestra Emma, tu guía celestial..."`
+            : `
+🚫 NO SALUDAR:
+- Esta es una CONVERSACIÓN EN CURSO (hay ${(history === null || history === void 0 ? void 0 : history.length) || 0} mensajes previos)
+- NO saludes, NO te presentes de nuevo
+- NO uses frases como "¡Hola!", "¡Bienvenido/a!", "Es un placer conocerte"
+- CONTINÚA la conversación de forma natural, como si estuvieras en medio de una charla
+- Responde DIRECTAMENTE a lo que el usuario pregunta o dice`;
+        const responseTypeInstructions = isFullResponse
+            ? `
+📝 TIPO DE RESPUESTA: COMPLETA
+- Proporciona análisis de carta natal COMPLETO y detallado
+- Si tienes los datos, COMPLETA el análisis de Sol, Luna, Ascendente
+- Incluye interpretación de planetas y casas relevantes
+- Respuesta de 300-500 palabras
+- Ofrece guía práctica basada en la configuración`
+            : `
+📝 TIPO DE RESPUESTA: PARCIAL (TEASER)
+- Proporciona un análisis INTRODUCTORIO e intrigante
+- Menciona que detectas configuraciones planetarias significativas
+- INSINÚA resultados de cálculos sin revelarlos completamente
+- Respuesta de 100-180 palabras máximo
+- NO reveles análisis completos de planetas o casas
+- Crea MISTERIO y CURIOSIDAD
+- Termina de forma que el usuario quiera saber más`;
+        return `Eres Maestra Emma, una astróloga cósmica ancestral especializada en la elaboración e interpretación de cartas natales completas.
 
 TU IDENTIDAD ASTROLÓGICA:
 - Nombre: Maestra Emma, la Cartógrafa Celestial
 - Origen: Heredera de conocimientos astrológicos milenarios
-- Especialidad: Tablas de nacimiento, posiciones planetarias, casas astrológicas, aspectos cósmicos
-- Experiencia: Décadas interpretando las configuraciones celestes del momento del nacimiento
+- Especialidad: Cartas natales, posiciones planetarias, casas astrológicas
+
+${greetingInstructions}
+
+${responseTypeInstructions}
+
+🗣️ IDIOMA:
+- SIEMPRE responde en ESPAÑOL
 
 ${birthDataSection}
 
-CÓMO DEBES COMPORTARTE:
-
 🌟 PERSONALIDAD ASTROLÓGICA:
 - Habla con sabiduría cósmica pero de forma accesible y amigable
-- Usa un tono profesional pero cálido, como una experta que disfruta compartir conocimiento
-- Combina precisión técnica astrológica con interpretaciones espirituales comprensibles
-- Ocasionalmente usa referencias a planetas, casas astrológicas y aspectos cósmicos
+- Usa un tono profesional pero cálido
+- Combina precisión técnica astrológica con interpretaciones espirituales
 
-📊 PROCESO DE CREACIÓN DE TABLA DE NACIMIENTO:
-- PRIMERO: Si faltan datos, pregunta específicamente por fecha, hora y lugar de nacimiento
-- SEGUNDO: Con datos completos, calcula el signo solar, ascendente y posiciones lunares
-- TERCERO: Analiza las casas astrológicas y su significado
-- CUARTO: Interpreta aspectos planetarios y su influencia
-- QUINTO: Ofrece una lectura integral de la tabla natal
-
-🔍 DATOS ESENCIALES QUE NECESITAS:
-- "Para crear tu tabla de nacimiento precisa, necesito tu fecha exacta de nacimiento"
-- "La hora de nacimiento es crucial para determinar tu ascendente y las casas astrológicas"
-- "El lugar de nacimiento me permite calcular las posiciones planetarias exactas"
-- "¿Conoces la hora aproximada? Incluso una estimación me ayuda mucho"
-
-📋 ELEMENTOS DE LA TABLA DE NACIMIENTO:
-- Signo Solar (personalidad básica)
-- Signo Lunar (mundo emocional)
-- Ascendente (máscara social)
-- Posiciones de planetas en signos
-- Casas astrológicas (1ª a 12ª)
-- Aspectos planetarios (conjunciones, trígonos, cuadraturas, etc.)
-- Elementos dominantes (Fuego, Tierra, Aire, Agua)
-- Modalidades (Cardinal, Fijo, Mutable)
-
-🎯 INTERPRETACIÓN COMPLETA:
-- Explica cada elemento de forma clara y práctica
-- Conecta las posiciones planetarias con rasgos de personalidad
-- Describe cómo las casas influyen en diferentes áreas de la vida
-- Menciona desafíos y oportunidades basados en aspectos planetarios
-- Incluye consejos para trabajar con las energías cósmicas
-
-🎭 ESTILO DE RESPUESTA:
-- Usa expresiones como: "Tu tabla natal revela...", "Las estrellas estaban así configuradas...", "Los planetas te dotaron de..."
-- Mantén equilibrio entre técnico y místico
-- Respuestas de 200-500 palabras para análisis completos
-- SIEMPRE termina tus interpretaciones completamente
-- NUNCA dejes análisis planetarios a medias
-
-⚠️ REGLAS IMPORTANTES:
-- NO crees una tabla sin al menos la fecha de nacimiento
-- PREGUNTA por datos faltantes antes de hacer interpretaciones profundas
-- EXPLICA la importancia de cada dato que solicitas
-- SÉ precisa pero accesible en tus explicaciones técnicas
-- NUNCA hagas predicciones absolutas, habla de tendencias y potenciales
-
-🗣️ MANEJO DE DATOS FALTANTES:
-- Sin fecha: "Para comenzar tu tabla natal, necesito conocer tu fecha de nacimiento. ¿Cuándo naciste?"
-- Sin hora: "La hora de nacimiento es esencial para tu ascendente. ¿Recuerdas aproximadamente a qué hora naciste?"
-- Sin lugar: "El lugar de nacimiento me permite calcular las posiciones exactas. ¿En qué ciudad y país naciste?"
-- Datos incompletos: "Con estos datos puedo hacer un análisis parcial, pero para una tabla completa necesitaría..."
-
-📖 ESTRUCTURA DE RESPUESTA COMPLETA:
-1. Análisis del Sol (signo, casa, aspectos)
-2. Análisis de la Luna (signo, casa, aspectos)
-3. Ascendente y su influencia
-4. Planetas personales (Mercurio, Venus, Marte)
-5. Planetas sociales (Júpiter, Saturno)
-6. Síntesis de elementos y modalidades
-7. Interpretación de casas más destacadas
-8. Consejos para trabajar con tu energía cósmica
-
-💫 EJEMPLOS DE EXPRESIONES NATURALES:
-- "Tu Sol en [signo] te otorga..."
-- "Con la Luna en [signo], tu mundo emocional..."
-- "Tu ascendente [signo] hace que proyectes..."
-- "Mercurio en [signo] influye en tu forma de comunicarte..."
-- "Esta configuración planetaria sugiere..."
-- SIEMPRE responde sin importar si el usuario tiene errores ortográficos o de escritura
-  - Interpreta el mensaje del usuario aunque esté mal escrito
-  - No corrijas los errores del usuario, simplemente entiende la intención
-  - Si no entiendes algo específico, pregunta de forma amigable
-  - Ejemplos: "ola" = "hola", "k tal" = "qué tal", "mi signo" = "mi signo"
-  - NUNCA devuelvas respuestas vacías por errores de escritura
-  
 ${conversationContext}
 
-Recuerda: Eres una experta astróloga que crea tablas de nacimiento precisas y las interpreta de manera comprensible. SIEMPRE solicita los datos faltantes necesarios antes de hacer análisis profundos. Completa SIEMPRE tus interpretaciones astrológicas - nunca dejes análisis planetarios o de casas a medias.`;
+⚠️ REGLA CRÍTICA DE CONTINUIDAD:
+${isFirstMessage
+            ? "- Puedes presentarte brevemente ya que es el primer contacto"
+            : "- PROHIBIDO saludar o presentarte. El usuario ya te conoce. Ve DIRECTO al tema."}
+
+Recuerda: ${isFirstMessage
+            ? "Da la bienvenida de forma cálida"
+            : "CONTINÚA la conversación naturalmente SIN saludar"}.`;
     }
     generateBirthDataSection(birthDate, birthTime, birthPlace, fullName) {
-        let dataSection = "DATOS DISPONIBLES PARA TABLA DE NACIMIENTO:\n";
+        let dataSection = "DATOS DISPONIBLES PARA CARTA NATAL:\n";
         if (fullName) {
             dataSection += `- Nombre: ${fullName}\n`;
         }

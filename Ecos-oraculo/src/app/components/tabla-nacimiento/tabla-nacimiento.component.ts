@@ -74,7 +74,6 @@ interface AstrologerInfo {
     MatInputModule,
     MatProgressSpinnerModule,
     RecolectaDatosComponent,
-    FortuneWheelComponent,
   ],
   templateUrl: './tabla-nacimiento.component.html',
   styleUrl: './tabla-nacimiento.component.css',
@@ -142,8 +141,11 @@ export class TablaNacimientoComponent
   isProcessingPayment: boolean = false;
   paymentError: string | null = null;
   hasUserPaidForBirthTable: boolean = false;
-  firstQuestionAsked: boolean = false;
   blockedMessageId: string | null = null;
+
+  // ✅ NUEVO: Sistema de 3 mensajes gratis
+  private userMessageCount: number = 0;
+  private readonly FREE_MESSAGES_LIMIT = 3;
 
   private backendUrl = environment.apiUrl;
 
@@ -218,6 +220,12 @@ export class TablaNacimientoComponent
       }
     }
 
+    // ✅ NUEVO: Cargar contador de mensajes
+    const savedMessageCount = sessionStorage.getItem('birthChartUserMessageCount');
+    if (savedMessageCount) {
+      this.userMessageCount = parseInt(savedMessageCount, 10);
+    }
+
     // ✅ NUEVO: Cargar datos del usuario desde sessionStorage
     const savedUserData = sessionStorage.getItem('userData');
     if (savedUserData) {
@@ -281,9 +289,6 @@ Estoy aquí para descifrar los secretos ocultos en tu carta natal. Las estrellas
 
   private loadSavedData(): void {
     const savedMessages = sessionStorage.getItem('birthChartMessages');
-    const savedFirstQuestion = sessionStorage.getItem(
-      'birthChartFirstQuestionAsked'
-    );
     const savedBlockedMessageId = sessionStorage.getItem(
       'birthChartBlockedMessageId'
     );
@@ -296,7 +301,6 @@ Estoy aquí para descifrar los secretos ocultos en tu carta natal. Las estrellas
           ...msg,
           timestamp: new Date(msg.timestamp),
         }));
-        this.firstQuestionAsked = savedFirstQuestion === 'true';
         this.blockedMessageId = savedBlockedMessageId || null;
         this.lastMessageCount = this.messages.length;
       } catch (error) {
@@ -316,45 +320,67 @@ Estoy aquí para descifrar los secretos ocultos en tu carta natal. Las estrellas
     }
   }
 
+  // ✅ NUEVO: Obtener mensajes gratis restantes
+  getFreeMessagesRemaining(): number {
+    if (this.hasUserPaidForBirthTable) {
+      return -1; // Ilimitado
+    }
+    return Math.max(0, this.FREE_MESSAGES_LIMIT - this.userMessageCount);
+  }
+
   sendMessage(): void {
     if (this.currentMessage?.trim() && !this.isLoading) {
       const userMessage = this.currentMessage.trim();
 
-      // ✅ NUEVA LÓGICA: Verificar consultas natales gratuitas ANTES de verificar pago
-      if (!this.hasUserPaidForBirthTable && this.firstQuestionAsked) {
-        // Verificar si tiene consultas natales gratis disponibles
-        if (this.hasFreeBirthChartConsultationsAvailable()) {
-          this.useFreeBirthChartConsultation();
-          // Continuar con el mensaje sin bloquear
-        } else {
-          // Si no tiene consultas gratis, mostrar modal de datos
+      // Calcular el próximo número de mensaje
+      const nextMessageCount = this.userMessageCount + 1;
 
-          // Cerrar otros modales primero
-          this.showFortuneWheel = false;
-          this.showPaymentModal = false;
+      console.log(
+        `📊 Carta Natal - Mensaje #${nextMessageCount}, Premium: ${this.hasUserPaidForBirthTable}, Límite: ${this.FREE_MESSAGES_LIMIT}`
+      );
 
-          // Guardar el mensaje para procesarlo después del pago
-          sessionStorage.setItem('pendingBirthChartMessage', userMessage);
+      // ✅ Verificar acceso
+      const canSendMessage =
+        this.hasUserPaidForBirthTable ||
+        this.hasFreeBirthChartConsultationsAvailable() ||
+        nextMessageCount <= this.FREE_MESSAGES_LIMIT;
 
-          this.saveStateBeforePayment();
+      if (!canSendMessage) {
+        console.log('❌ Sin acceso - mostrando modal de pago');
 
-          // Mostrar modal de datos con timeout
-          setTimeout(() => {
-            this.showDataModal = true;
-            this.cdr.markForCheck();
-          }, 100);
+        // Cerrar otros modales
+        this.showFortuneWheel = false;
+        this.showPaymentModal = false;
 
-          return; // Salir aquí para no procesar el mensaje aún
-        }
+        // Guardar mensaje pendiente
+        sessionStorage.setItem('pendingBirthChartMessage', userMessage);
+        this.saveStateBeforePayment();
+
+        // Mostrar modal de datos
+        setTimeout(() => {
+          this.showDataModal = true;
+          this.cdr.markForCheck();
+        }, 100);
+
+        return;
+      }
+
+      // ✅ Si usa consulta gratis de ruleta (después de los 3 gratis)
+      if (
+        !this.hasUserPaidForBirthTable &&
+        nextMessageCount > this.FREE_MESSAGES_LIMIT &&
+        this.hasFreeBirthChartConsultationsAvailable()
+      ) {
+        this.useFreeBirthChartConsultation();
       }
 
       this.shouldScrollToBottom = true;
 
       // Procesar mensaje normalmente
-      this.processBirthChartUserMessage(userMessage);
+      this.processBirthChartUserMessage(userMessage, nextMessageCount);
     }
   }
-  private processBirthChartUserMessage(userMessage: string): void {
+  private processBirthChartUserMessage(userMessage: string, messageCount: number): void {
     // Agregar mensaje del usuario
     const userMsg = {
       sender: 'Du',
@@ -364,12 +390,19 @@ Estoy aquí para descifrar los secretos ocultos en tu carta natal. Las estrellas
     };
     this.messages.push(userMsg);
 
+    // ✅ Actualizar contador
+    this.userMessageCount = messageCount;
+    sessionStorage.setItem(
+      'birthChartUserMessageCount',
+      this.userMessageCount.toString()
+    );
+
     this.saveMessagesToSession();
     this.currentMessage = '';
     this.isLoading = true;
 
-    // Usar el servicio real de carta natal
-    this.generateAstrologicalResponse(userMessage).subscribe({
+    // ✅ Usar el servicio real de carta natal con contador
+    this.generateAstrologicalResponse(userMessage, messageCount).subscribe({
       next: (response: any) => {
         this.isLoading = false;
 
@@ -385,12 +418,13 @@ Estoy aquí para descifrar los secretos ocultos en tu carta natal. Las estrellas
 
         this.shouldScrollToBottom = true;
 
-        // ✅ LÓGICA MODIFICADA: Solo bloquear si no tiene consultas gratis Y no ha pagado
-        if (
-          this.firstQuestionAsked &&
+        // ✅ Mostrar paywall si superó el límite gratuito Y no tiene consultas de ruleta
+        const shouldShowPaywall =
           !this.hasUserPaidForBirthTable &&
-          !this.hasFreeBirthChartConsultationsAvailable()
-        ) {
+          messageCount > this.FREE_MESSAGES_LIMIT &&
+          !this.hasFreeBirthChartConsultationsAvailable();
+
+        if (shouldShowPaywall) {
           this.blockedMessageId = messageId;
           sessionStorage.setItem('birthChartBlockedMessageId', messageId);
 
@@ -407,9 +441,6 @@ Estoy aquí para descifrar los secretos ocultos en tu carta natal. Las estrellas
               this.cdr.markForCheck();
             }, 100);
           }, 2000);
-        } else if (!this.firstQuestionAsked) {
-          this.firstQuestionAsked = true;
-          sessionStorage.setItem('birthChartFirstQuestionAsked', 'true');
         }
 
         this.saveMessagesToSession();
@@ -432,7 +463,8 @@ Estoy aquí para descifrar los secretos ocultos en tu carta natal. Las estrellas
     });
   }
   private generateAstrologicalResponse(
-    userMessage: string
+    userMessage: string,
+    messageCount: number
   ): Observable<string> {
     // Crear el historial de conversación para el contexto
     const conversationHistory = this.messages
@@ -458,29 +490,35 @@ Estoy aquí para descifrar los secretos ocultos en tu carta natal. Las estrellas
       conversationHistory,
     };
 
-    // Llamar al servicio y transformar la respuesta
-    return this.tablaNacimientoService.chatWithAstrologer(request).pipe(
-      map((response: BirthChartResponse) => {
-        if (response.success && response.response) {
-          return response.response;
-        } else {
-          throw new Error(response.error || 'Unbekannter Dienstfehler');
-        }
-      }),
-      catchError((error: any) => {
-        return of(
-          '🌟 Las configuraciones celestiales están temporalmente nubladas. Las estrellas me susurran que debo recargar mis energías cósmicas. Por favor, intenta de nuevo en unos momentos.'
-        );
-      })
-    );
+    // ✅ Llamar al servicio con contador de mensajes
+    return this.tablaNacimientoService
+      .chatWithAstrologerWithCount(
+        request,
+        messageCount,
+        this.hasUserPaidForBirthTable
+      )
+      .pipe(
+        map((response: BirthChartResponse) => {
+          if (response.success && response.response) {
+            return response.response;
+          } else {
+            throw new Error(response.error || 'Unbekannter Dienstfehler');
+          }
+        }),
+        catchError((error: any) => {
+          return of(
+            '🌟 Las configuraciones celestiales están temporalmente nubladas. Las estrellas me susurran que debo recargar mis energías cósmicas. Por favor, intenta de nuevo en unos momentos.'
+          );
+        })
+      );
   }
 
   private saveStateBeforePayment(): void {
     this.saveMessagesToSession();
     this.saveChartData();
     sessionStorage.setItem(
-      'birthChartFirstQuestionAsked',
-      this.firstQuestionAsked.toString()
+      'birthChartUserMessageCount',
+      this.userMessageCount.toString()
     );
     if (this.blockedMessageId) {
       sessionStorage.setItem(
@@ -743,16 +781,26 @@ Estoy aquí para descifrar los secretos ocultos en tu carta natal. Las estrellas
     this.currentMessage = '';
     this.lastMessageCount = 0;
 
-    // Resetear estados
-    this.firstQuestionAsked = false;
-    this.blockedMessageId = null;
-    this.isLoading = false;
+    // ✅ Resetear contador y estados
+    if (!this.hasUserPaidForBirthTable) {
+      this.userMessageCount = 0;
+      this.blockedMessageId = null;
+      sessionStorage.removeItem('birthChartMessages');
+      sessionStorage.removeItem('birthChartBlockedMessageId');
+      sessionStorage.removeItem('birthChartData');
+      sessionStorage.removeItem('birthChartUserMessageCount');
+      sessionStorage.removeItem('freeBirthChartConsultations');
+      sessionStorage.removeItem('pendingBirthChartMessage');
+    } else {
+      sessionStorage.removeItem('birthChartMessages');
+      sessionStorage.removeItem('birthChartBlockedMessageId');
+      sessionStorage.removeItem('birthChartData');
+      sessionStorage.removeItem('birthChartUserMessageCount');
+      this.userMessageCount = 0;
+      this.blockedMessageId = null;
+    }
 
-    // Limpiar sessionStorage de tabla de nacimiento (pero NO userData)
-    sessionStorage.removeItem('birthChartMessages');
-    sessionStorage.removeItem('birthChartFirstQuestionAsked');
-    sessionStorage.removeItem('birthChartBlockedMessageId');
-    sessionStorage.removeItem('birthChartData');
+    this.isLoading = false;
 
     // Indicar que se debe hacer scroll porque hay un mensaje nuevo
     this.shouldScrollToBottom = true;

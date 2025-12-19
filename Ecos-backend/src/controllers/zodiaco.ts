@@ -21,21 +21,28 @@ interface ZodiacRequest {
     role: "user" | "astrologer";
     message: string;
   }>;
+  messageCount?: number;
+  isPremiumUser?: boolean;
+}
+
+interface ZodiacResponse extends ChatResponse {
+  freeMessagesRemaining?: number;
+  showPaywall?: boolean;
+  paywallMessage?: string;
+  isCompleteResponse?: boolean;
 }
 
 export class ZodiacController {
   private genAI: GoogleGenerativeAI;
 
-  // ✅ LISTA DE MODELOS DE RESPALDO (en orden de preferencia)
- private readonly MODELS_FALLBACK = [
-    "gemini-2.5-flash",
-    "gemini-2.5-flash-preview-09-2025",
+  private readonly FREE_MESSAGES_LIMIT = 3;
+
+  private readonly MODELS_FALLBACK = [
     "gemini-2.5-flash-lite",
     "gemini-2.5-flash-lite-preview-09-2025",
     "gemini-2.0-flash",
     "gemini-2.0-flash-lite",
   ];
-
 
   constructor() {
     if (!process.env.GEMINI_API_KEY) {
@@ -44,6 +51,50 @@ export class ZodiacController {
       );
     }
     this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+  }
+
+  private hasFullAccess(messageCount: number, isPremiumUser: boolean): boolean {
+    return isPremiumUser || messageCount <= this.FREE_MESSAGES_LIMIT;
+  }
+
+  // ✅ GANCHO SOLO EN ESPAÑOL
+  private generateZodiacHookMessage(): string {
+    return `
+
+♈ **¡Espera! Tu signo zodiacal me ha revelado información extraordinaria...**
+
+He analizado las características de tu signo, pero para revelarte:
+- 🌟 Tu **análisis completo de personalidad** según tu signo
+- 💫 Las **fortalezas ocultas** que tu signo te otorga
+- ❤️ Tu **compatibilidad amorosa** con todos los signos del zodiaco
+- 🔮 Las **predicciones** específicas para tu signo este mes
+- ⚡ Los **desafíos** que debes superar según tu elemento
+- 🌙 Tu **planeta regente** y cómo influye en tu vida diaria
+
+**Desbloquea tu lectura zodiacal completa ahora** y descubre todo el poder que las estrellas han depositado en tu signo.
+
+✨ *Miles de personas ya han descubierto los secretos de su signo zodiacal...*`;
+  }
+
+  // ✅ PROCESAR RESPUESTA PARCIAL (TEASER)
+  private createZodiacPartialResponse(fullText: string): string {
+    const sentences = fullText
+      .split(/[.!?]+/)
+      .filter((s) => s.trim().length > 0);
+    const teaserSentences = sentences.slice(0, Math.min(3, sentences.length));
+    let teaser = teaserSentences.join(". ").trim();
+
+    if (
+      !teaser.endsWith(".") &&
+      !teaser.endsWith("!") &&
+      !teaser.endsWith("?")
+    ) {
+      teaser += "...";
+    }
+
+    const hook = this.generateZodiacHookMessage();
+
+    return teaser + hook;
   }
 
   public chatWithAstrologer = async (
@@ -57,36 +108,69 @@ export class ZodiacController {
         birthDate,
         zodiacSign,
         conversationHistory,
+        messageCount = 1,
+        isPremiumUser = false,
       }: ZodiacRequest = req.body;
 
-      // Validar entrada
       this.validateZodiacRequest(zodiacData, userMessage);
+
+      const shouldGiveFullResponse = this.hasFullAccess(
+        messageCount,
+        isPremiumUser
+      );
+      const freeMessagesRemaining = Math.max(
+        0,
+        this.FREE_MESSAGES_LIMIT - messageCount
+      );
+
+      console.log(
+        `📊 Zodiac - Message count: ${messageCount}, Premium: ${isPremiumUser}, Full response: ${shouldGiveFullResponse}`
+      );
 
       const contextPrompt = this.createZodiacContext(
         zodiacData,
         birthDate,
         zodiacSign,
-        conversationHistory
+        conversationHistory,
+        shouldGiveFullResponse
       );
+
+      const responseInstructions = shouldGiveFullResponse
+        ? `1. DEBES generar una respuesta COMPLETA de entre 300-500 palabras
+2. Si tienes el signo, COMPLETA el análisis de personalidad zodiacal
+3. Incluye características, fortalezas, desafíos y compatibilidades
+4. Proporciona consejos basados en el signo
+5. Menciona el elemento y planeta regente`
+        : `1. DEBES generar una respuesta PARCIAL de entre 100-180 palabras
+2. INSINÚA que has identificado características importantes del signo
+3. Menciona que tienes información valiosa pero NO la reveles completamente
+4. Crea MISTERIO y CURIOSIDAD sobre las características del signo
+5. Usa frases como "Tu signo revela algo fascinante...", "Veo características muy especiales en ti...", "Los nativos de tu signo tienen un don que..."
+6. NUNCA completes el análisis del signo, déjalo en suspenso`;
 
       const fullPrompt = `${contextPrompt}
 
 ⚠️ INSTRUCCIONES CRÍTICAS OBLIGATORIAS:
-1. DEBES generar una respuesta COMPLETA de entre 200-500 palabras
-2. NUNCA dejes una respuesta a medias o incompleta
-3. Si mencionas características del signo, DEBES completar la descripción
-4. Toda respuesta DEBE terminar con una conclusión clara y un punto final
-5. Si detectas que tu respuesta se está cortando, finaliza la idea actual con coherencia
-6. SIEMPRE mantén el tono astrológico amigable y accesible
-7. Si el mensaje tiene errores ortográficos, interpreta la intención y responde normalmente
+${responseInstructions}
+- NUNCA dejes una respuesta a medias o incompleta según el tipo de respuesta
+- Si mencionas características del signo, ${
+        shouldGiveFullResponse
+          ? "DEBES completar la descripción"
+          : "crea expectativa sin revelar todo"
+      }
+- SIEMPRE mantén el tono astrológico amigable y accesible
+- Si el mensaje tiene errores ortográficos, interpreta la intención y responde normalmente
 
 Usuario: "${userMessage}"
 
-Respuesta de la astróloga (asegúrate de completar TODO tu análisis zodiacal antes de terminar):`;
+Respuesta de la astróloga (EN ESPAÑOL):`;
 
-      console.log(`Generando lectura zodiacal...`);
+      console.log(
+        `Generando lectura zodiacal (${
+          shouldGiveFullResponse ? "COMPLETA" : "PARCIAL"
+        })...`
+      );
 
-      // ✅ SISTEMA DE FALLBACK: Intentar con múltiples modelos
       let text = "";
       let usedModel = "";
       let allModelErrors: string[] = [];
@@ -101,7 +185,7 @@ Respuesta de la astróloga (asegúrate de completar TODO tu análisis zodiacal a
               temperature: 0.85,
               topK: 50,
               topP: 0.92,
-              maxOutputTokens: 600,
+              maxOutputTokens: shouldGiveFullResponse ? 700 : 300,
               candidateCount: 1,
               stopSequences: [],
             },
@@ -125,7 +209,6 @@ Respuesta de la astróloga (asegúrate de completar TODO tu análisis zodiacal a
             ],
           });
 
-          // ✅ REINTENTOS para cada modelo (por si está temporalmente sobrecargado)
           let attempts = 0;
           const maxAttempts = 3;
           let modelSucceeded = false;
@@ -141,14 +224,14 @@ Respuesta de la astróloga (asegúrate de completar TODO tu análisis zodiacal a
               const response = result.response;
               text = response.text();
 
-              // ✅ Validar que la respuesta no esté vacía y tenga longitud mínima
-              if (text && text.trim().length >= 100) {
+              const minLength = shouldGiveFullResponse ? 100 : 50;
+              if (text && text.trim().length >= minLength) {
                 console.log(
                   `  ✅ Success with ${modelName} on attempt ${attempts}`
                 );
                 usedModel = modelName;
                 modelSucceeded = true;
-                break; // Salir del while de reintentos
+                break;
               }
 
               console.warn(`  ⚠️ Response too short, retrying...`);
@@ -167,7 +250,6 @@ Respuesta de la astróloga (asegúrate de completar TODO tu análisis zodiacal a
             }
           }
 
-          // Si este modelo tuvo éxito, salir del loop de modelos
           if (modelSucceeded) {
             break;
           }
@@ -178,38 +260,45 @@ Respuesta de la astróloga (asegúrate de completar TODO tu análisis zodiacal a
           );
           allModelErrors.push(`${modelName}: ${modelError.message}`);
 
-          // Esperar un poco antes de intentar con el siguiente modelo
           await new Promise((resolve) => setTimeout(resolve, 1000));
           continue;
         }
       }
 
-      // ✅ Si todos los modelos fallaron
       if (!text || text.trim() === "") {
         console.error("❌ All models failed. Errors:", allModelErrors);
         throw new Error(
-          `Todos los modelos de IA no están disponibles actualmente. Intentados: ${this.MODELS_FALLBACK.join(
-            ", "
-          )}. Por favor, inténtalo de nuevo en un momento.`
+          `Todos los modelos de IA no están disponibles actualmente. Por favor, inténtalo de nuevo en un momento.`
         );
       }
 
-      // ✅ ASEGURAR RESPUESTA COMPLETA Y BIEN FORMATEADA
-      text = this.ensureCompleteResponse(text);
+      let finalResponse: string;
 
-      // ✅ Validación adicional de longitud mínima
-      if (text.trim().length < 100) {
-        throw new Error("Respuesta generada demasiado corta");
+      if (shouldGiveFullResponse) {
+        finalResponse = this.ensureCompleteResponse(text);
+      } else {
+        finalResponse = this.createZodiacPartialResponse(text);
       }
 
-      const chatResponse: ChatResponse = {
+      const chatResponse: ZodiacResponse = {
         success: true,
-        response: text.trim(),
+        response: finalResponse.trim(),
         timestamp: new Date().toISOString(),
+        freeMessagesRemaining: freeMessagesRemaining,
+        showPaywall:
+          !shouldGiveFullResponse && messageCount > this.FREE_MESSAGES_LIMIT,
+        isCompleteResponse: shouldGiveFullResponse,
       };
 
+      if (!shouldGiveFullResponse && messageCount > this.FREE_MESSAGES_LIMIT) {
+        chatResponse.paywallMessage =
+          "Has usado tus 3 mensajes gratuitos. ¡Desbloquea acceso ilimitado para descubrir todos los secretos de tu signo zodiacal!";
+      }
+
       console.log(
-        `✅ Lectura zodiacal generada exitosamente con ${usedModel} (${text.length} caracteres)`
+        `✅ Lectura zodiacal generada (${
+          shouldGiveFullResponse ? "COMPLETA" : "PARCIAL"
+        }) con ${usedModel} (${finalResponse.length} caracteres)`
       );
       res.json(chatResponse);
     } catch (error) {
@@ -217,11 +306,9 @@ Respuesta de la astróloga (asegúrate de completar TODO tu análisis zodiacal a
     }
   };
 
-  // ✅ MÉTODO MEJORADO PARA ASEGURAR RESPUESTAS COMPLETAS
   private ensureCompleteResponse(text: string): string {
     let processedText = text.trim();
 
-    // Remover posibles marcadores de código o formato incompleto
     processedText = processedText.replace(/```[\s\S]*?```/g, "").trim();
 
     const lastChar = processedText.slice(-1);
@@ -247,11 +334,9 @@ Respuesta de la astróloga (asegúrate de completar TODO tu análisis zodiacal a
     ].includes(lastChar);
 
     if (endsIncomplete && !processedText.endsWith("...")) {
-      // Buscar la última oración completa
       const sentences = processedText.split(/([.!?])/);
 
       if (sentences.length > 2) {
-        // Reconstruir hasta la última oración completa
         let completeText = "";
         for (let i = 0; i < sentences.length - 1; i += 2) {
           if (sentences[i].trim()) {
@@ -264,18 +349,19 @@ Respuesta de la astróloga (asegúrate de completar TODO tu análisis zodiacal a
         }
       }
 
-      // Si no se puede encontrar una oración completa, agregar cierre apropiado
       processedText = processedText.trim() + "...";
     }
 
     return processedText;
   }
 
+  // ✅ CONTEXTO SOLO EN ESPAÑOL
   private createZodiacContext(
     zodiacData: ZodiacData,
     birthDate?: string,
     zodiacSign?: string,
-    history?: Array<{ role: string; message: string }>
+    history?: Array<{ role: string; message: string }>,
+    isFullResponse: boolean = true
   ): string {
     const conversationContext =
       history && history.length > 0
@@ -292,6 +378,26 @@ Respuesta de la astróloga (asegúrate de completar TODO tu análisis zodiacal a
       zodiacInfo = `\nSigno zodiacal proporcionado: ${zodiacSign}`;
     }
 
+    const responseTypeInstructions = isFullResponse
+      ? `
+📝 TIPO DE RESPUESTA: COMPLETA
+- Proporciona análisis zodiacal COMPLETO y detallado
+- Si tienes el signo, COMPLETA el análisis de personalidad
+- Incluye características, fortalezas, desafíos, compatibilidades
+- Respuesta de 300-500 palabras
+- Menciona elemento, modalidad y planeta regente`
+      : `
+📝 TIPO DE RESPUESTA: PARCIAL (TEASER)
+- Proporciona un análisis INTRODUCTORIO e intrigante
+- Menciona que has identificado el signo y sus características
+- INSINÚA información valiosa sin revelarla completamente
+- Respuesta de 100-180 palabras máximo
+- NO reveles análisis completos del signo
+- Crea MISTERIO y CURIOSIDAD
+- Termina de forma que el usuario quiera saber más
+- Usa frases como "Tu signo revela algo fascinante...", "Los nativos de tu signo tienen cualidades especiales que...", "Veo en ti características muy interesantes..."
+- NUNCA completes el análisis zodiacal, déjalo en suspenso`;
+
     return `Eres Maestra Luna, una astróloga experta en signos zodiacales con décadas de experiencia interpretando las energías celestiales y su influencia en la personalidad humana.
 
 TU IDENTIDAD:
@@ -300,7 +406,11 @@ TU IDENTIDAD:
 - Experiencia: Décadas estudiando e interpretando la influencia de los signos del zodiaco
 ${zodiacInfo}
 
-CÓMO DEBES COMPORTARTE:
+${responseTypeInstructions}
+
+🗣️ IDIOMA:
+- SIEMPRE responde en ESPAÑOL
+- Sin importar en qué idioma escriba el usuario, TÚ respondes en español
 
 🌟 PERSONALIDAD ASTROLÓGICA:
 - Habla con conocimiento profundo pero de forma accesible y amigable
@@ -309,36 +419,83 @@ CÓMO DEBES COMPORTARTE:
 - Menciona elementos (Fuego, Tierra, Aire, Agua) y modalidades (Cardinal, Fijo, Mutable)
 
 ♈ ANÁLISIS DE SIGNOS ZODIACALES:
-- Describe rasgos de personalidad positivos y áreas de crecimiento
-- Explica fortalezas naturales y desafíos del signo
-- Menciona compatibilidades con otros signos
-- Incluye consejos prácticos basados en características del signo
-- Habla sobre planeta regente y su influencia
+- ${
+      isFullResponse
+        ? "Describe rasgos de personalidad positivos y áreas de crecimiento"
+        : "Insinúa rasgos interesantes sin revelarlos completamente"
+    }
+- ${
+      isFullResponse
+        ? "Explica fortalezas naturales y desafíos del signo"
+        : "Menciona que hay fortalezas y desafíos importantes"
+    }
+- ${
+      isFullResponse
+        ? "Menciona compatibilidades con otros signos"
+        : "Sugiere que tienes información de compatibilidades"
+    }
+- ${
+      isFullResponse
+        ? "Incluye consejos prácticos basados en características del signo"
+        : "Menciona que tienes consejos valiosos"
+    }
+- ${
+      isFullResponse
+        ? "Habla sobre planeta regente y su influencia"
+        : "Insinúa influencias planetarias sin detallar"
+    }
 
 🎯 ESTRUCTURA DE RESPUESTA:
-- Características principales del signo
+${
+  isFullResponse
+    ? `- Características principales del signo
 - Fortalezas y talentos naturales
 - Áreas de desarrollo y crecimiento
 - Compatibilidades astrológicas
-- Consejos personalizados
+- Consejos personalizados`
+    : `- Introducción intrigante sobre el signo
+- Insinuación de características especiales
+- Mención de información valiosa sin revelar
+- Creación de curiosidad y expectativa`
+}
 
 🎭 ESTILO DE RESPUESTA:
 - Usa expresiones como: "Los nativos de [signo]...", "Tu signo te otorga...", "Como [signo], posees..."
 - Mantén equilibrio entre místico y práctico
-- Respuestas de 200-500 palabras completas
-- SIEMPRE termina tus interpretaciones completamente
-- NUNCA dejes características del signo a medias
+- ${
+      isFullResponse
+        ? "Respuestas de 300-500 palabras completas"
+        : "Respuestas de 100-180 palabras que generen intriga"
+    }
+- ${
+      isFullResponse
+        ? "SIEMPRE termina tus interpretaciones completamente"
+        : "Deja las interpretaciones en suspenso"
+    }
 
 ⚠️ REGLAS IMPORTANTES:
+- SIEMPRE responde en español
+- ${
+      isFullResponse
+        ? "COMPLETA todos los análisis que inicies"
+        : "CREA SUSPENSO y MISTERIO sobre el signo"
+    }
 - SI NO tienes el signo zodiacal, pregunta por la fecha de nacimiento
 - Explica por qué necesitas este dato
-- NO hagas interpretaciones sin conocer el signo
+- NO hagas interpretaciones profundas sin conocer el signo
 - SÉ positiva pero realista en tus descripciones
 - NUNCA hagas predicciones absolutas
+- SIEMPRE responde sin importar si el usuario tiene errores ortográficos
+  - Interpreta el mensaje del usuario aunque esté mal escrito
+  - NUNCA devuelvas respuestas vacías por errores de escritura
 
 🗣️ MANEJO DE DATOS FALTANTES:
 - Sin signo/fecha: "Para darte una lectura precisa, necesito saber tu signo zodiacal o fecha de nacimiento. ¿Cuándo naciste?"
-- Con signo: Procede con análisis completo del signo
+- Con signo: ${
+      isFullResponse
+        ? "Procede con análisis completo del signo"
+        : "Insinúa información valiosa del signo sin revelar todo"
+    }
 - Preguntas generales: Responde con información astrológica educativa
 
 💫 EJEMPLOS DE EXPRESIONES:
@@ -346,15 +503,18 @@ CÓMO DEBES COMPORTARTE:
 - "Tu signo de [elemento] te otorga..."
 - "Como [modalidad], tiendes a..."
 - "Tu planeta regente [planeta] influye en..."
-- SIEMPRE responde sin importar si el usuario tiene errores ortográficos o de escritura
-  - Interpreta el mensaje del usuario aunque esté mal escrito
-  - No corrijas los errores del usuario, simplemente entiende la intención
-  - Si no entiendes algo específico, pregunta de forma amigable
-  - NUNCA devuelvas respuestas vacías por errores de escritura
 
 ${conversationContext}
 
-Recuerda: Eres una experta en signos zodiacales que interpreta las características astrológicas de forma comprensible y útil. SIEMPRE solicita el signo o fecha de nacimiento si no los tienes. Completa SIEMPRE tus interpretaciones - nunca dejes análisis zodiacales a medias.`;
+Recuerda: Eres una experta en signos zodiacales que ${
+      isFullResponse
+        ? "interpreta las características astrológicas de forma comprensible y completa"
+        : "intriga sobre las características especiales que has detectado en el signo"
+    }. SIEMPRE solicita el signo o fecha de nacimiento si no los tienes. ${
+      isFullResponse
+        ? "Completa SIEMPRE tus interpretaciones"
+        : "CREA expectativa sobre la lectura zodiacal completa que podrías ofrecer"
+    }.`;
   }
 
   private calculateZodiacSign(dateStr: string): string {
@@ -471,7 +631,7 @@ Recuerda: Eres una experta en signos zodiacales que interpreta las característi
       errorCode = "ALL_MODELS_UNAVAILABLE";
     }
 
-    const errorResponse: ChatResponse = {
+    const errorResponse: ZodiacResponse = {
       success: false,
       error: errorMessage,
       code: errorCode,
@@ -499,6 +659,7 @@ Recuerda: Eres una experta en signos zodiacales que interpreta las característi
             "Influencia de elementos y modalidades",
           ],
         },
+        freeMessagesLimit: this.FREE_MESSAGES_LIMIT,
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
